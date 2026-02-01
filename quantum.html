@@ -1,0 +1,2301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TITAN OS | QUANTUM CONNECT</title>
+    <style>
+      /* === MOBILE-FIRST QUANTUM CONNECT CSS === */
+      :root {
+        /* Colors */
+        --bg-dark: #000000;
+        --bg-glass: rgba(30, 41, 59, 0.95);
+        --border-glass: rgba(255, 255, 255, 0.15);
+        --accent-blue: #3b82f6;
+        --accent-purple: #8b5cf6;
+        --accent-pink: #ec4899;
+        --accent-cyan: #06b6d4;
+        --accent-yellow: #f59e0b;
+        --text-light: #f1f5f9;
+        --text-dim: #94a3b8;
+
+        /* Touch sizes */
+        --touch-min: 44px;
+        --touch-large: 60px;
+        --touch-gap: 8px;
+
+        /* Spacing */
+        --space-xs: 4px;
+        --space-sm: 8px;
+        --space-md: 16px;
+        --space-lg: 24px;
+        --space-xl: 32px;
+
+        /* Typography */
+        --text-xs: 0.75rem;
+        --text-sm: 0.875rem;
+        --text-base: 1rem;
+        --text-lg: 1.125rem;
+        --text-xl: 1.25rem;
+        --text-2xl: 1.5rem;
+        --text-3xl: 2rem;
+        --text-4xl: 2.5rem;
+
+        /* Border radius */
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --radius-2xl: 24px;
+
+        /* Shadows */
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+        --glow-blue: 0 0 20px rgba(59, 130, 246, 0.4);
+      }
+
+      /* === BASE STYLES === */
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-text-size-adjust: 100%;
+        touch-action: manipulation;
+      }
+
+      html {
+        font-size: 16px;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: var(--bg-dark);
+        color: var(--text-light);
+        min-height: 100vh;
+        overflow-x: hidden;
+        overscroll-behavior: none;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right)
+          env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+
+      /* === TOUCH-FRIENDLY ELEMENTS === */
+      button,
+      a,
+      [role="button"],
+      .control-btn,
+      .mode-card,
+      .cell,
+      .layer-btn {
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        min-height: var(--touch-min);
+        min-width: var(--touch-min);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* === BACK BUTTON === */
+      .back-btn {
+        position: fixed;
+        top: max(12px, env(safe-area-inset-top));
+        left: var(--space-md);
+        padding: var(--space-sm) var(--space-md);
+        background: rgba(59, 130, 246, 0.2);
+        border: 1px solid var(--accent-blue);
+        border-radius: var(--radius-lg);
+        color: var(--accent-blue);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        text-decoration: none;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+      }
+
+      .back-btn:active {
+        background: var(--accent-blue);
+        color: white;
+        transform: scale(0.95);
+      }
+
+      /* === START SCREEN === */
+      .start-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(5, 5, 5, 0.98);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        backdrop-filter: blur(20px);
+        padding: var(--space-md);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .start-title {
+        font-size: clamp(1.75rem, 8vw, 3rem);
+        font-weight: 800;
+        background: linear-gradient(
+          90deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: var(--space-sm);
+        line-height: 1.2;
+        padding: 0 var(--space-md);
+      }
+
+      .start-subtitle {
+        font-size: clamp(var(--text-base), 4vw, 1.25rem);
+        color: var(--text-dim);
+        text-align: center;
+        margin-bottom: var(--space-xl);
+        max-width: 600px;
+        padding: 0 var(--space-md);
+        line-height: 1.4;
+      }
+
+      /* === INSTRUCTIONS === */
+      .instructions {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        padding: var(--space-lg);
+        margin: var(--space-lg) auto;
+        width: 100%;
+        max-width: 800px;
+        box-shadow: var(--shadow-lg);
+      }
+
+      .instruction-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: var(--space-md);
+        margin-bottom: var(--space-lg);
+      }
+
+      .instruction-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        text-align: center;
+      }
+
+      .instruction-card .icon {
+        font-size: 2rem;
+        margin-bottom: var(--space-sm);
+      }
+
+      .instruction-card h3 {
+        font-size: var(--text-sm);
+        margin-bottom: var(--space-xs);
+        color: var(--accent-yellow);
+      }
+
+      .instruction-card p {
+        font-size: var(--text-xs);
+        color: var(--text-dim);
+        line-height: 1.4;
+      }
+
+      /* === MODE SELECTOR === */
+      .mode-selector {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+        margin: var(--space-xl) 0;
+        width: 100%;
+        max-width: 800px;
+      }
+
+      .mode-card {
+        padding: var(--space-lg);
+        background: var(--bg-glass);
+        border: 2px solid transparent;
+        border-radius: var(--radius-xl);
+        transition: all 0.2s ease;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        touch-action: manipulation;
+      }
+
+      .mode-card:active {
+        transform: scale(0.98);
+        border-color: var(--accent-blue);
+        box-shadow: var(--glow-blue);
+      }
+
+      .mode-card.active {
+        border-color: var(--accent-blue);
+        background: rgba(59, 130, 246, 0.15);
+        box-shadow: var(--glow-blue);
+      }
+
+      .mode-icon {
+        font-size: 2.5rem;
+        margin-bottom: var(--space-md);
+      }
+
+      .mode-title {
+        font-size: var(--text-lg);
+        font-weight: 700;
+        margin-bottom: var(--space-sm);
+        color: white;
+      }
+
+      .mode-desc {
+        font-size: var(--text-sm);
+        color: var(--text-dim);
+        line-height: 1.4;
+      }
+
+      /* === DIFFICULTY SELECTOR === */
+      .difficulty-selector {
+        margin: var(--space-xl) 0;
+        width: 100%;
+        max-width: 500px;
+        opacity: 0;
+        height: 0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .difficulty-selector.show {
+        opacity: 1;
+        height: auto;
+      }
+
+      .difficulty-buttons {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-sm);
+        margin-top: var(--space-md);
+      }
+
+      .diff-btn {
+        padding: var(--space-md);
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-md);
+        color: var(--text-dim);
+        font-weight: 600;
+        transition: all 0.2s ease;
+        font-size: var(--text-sm);
+        min-height: var(--touch-large);
+      }
+
+      .diff-btn:active {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(0.95);
+      }
+
+      .diff-btn.active {
+        background: linear-gradient(
+          135deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+        color: white;
+        border-color: transparent;
+      }
+
+      /* === START BUTTON === */
+      .start-btn {
+        padding: var(--space-lg) var(--space-xl);
+        background: linear-gradient(
+          135deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+        border: none;
+        border-radius: var(--radius-xl);
+        color: white;
+        font-size: var(--text-lg);
+        font-weight: 700;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-lg);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        width: 100%;
+        max-width: 300px;
+        min-height: var(--touch-large);
+        margin-top: var(--space-lg);
+      }
+
+      .start-btn:active {
+        transform: scale(0.95);
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.6);
+      }
+
+      /* === GAME CONTAINER === */
+      .game-container {
+        display: none;
+        width: 100%;
+        height: 100vh;
+        padding: max(12px, env(safe-area-inset-top)) var(--space-sm)
+          max(80px, env(safe-area-inset-bottom)) var(--space-sm);
+        overflow: hidden;
+      }
+
+      /* === GAME HEADER === */
+      .game-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-md);
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        margin-bottom: var(--space-md);
+      }
+
+      .game-title {
+        font-size: clamp(var(--text-lg), 5vw, 1.5rem);
+        font-weight: 700;
+        background: linear-gradient(
+          90deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .mode-indicator {
+        padding: var(--space-xs) var(--space-md);
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid var(--accent-blue);
+        border-radius: 20px;
+        font-size: var(--text-xs);
+        font-weight: 600;
+        color: var(--accent-blue);
+        white-space: nowrap;
+      }
+
+      /* === GAME AREA (MOBILE STACK) === */
+      .game-area {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 120px);
+        gap: var(--space-md);
+      }
+
+      /* === BOARD CONTAINER === */
+      .board-container {
+        flex: 1;
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        padding: var(--space-md);
+        display: flex;
+        flex-direction: column;
+        min-height: 0; /* Important for flex scrolling */
+      }
+
+      /* === LAYER CONTROLS === */
+      .layer-controls {
+        display: flex;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-md);
+        overflow-x: auto;
+        padding-bottom: var(--space-xs);
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+
+      .layer-controls::-webkit-scrollbar {
+        display: none;
+      }
+
+      .layer-btn {
+        padding: var(--space-sm) var(--space-md);
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-md);
+        color: var(--text-dim);
+        font-weight: 600;
+        font-size: var(--text-sm);
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: 70px;
+      }
+
+      .layer-btn:active {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(0.95);
+      }
+
+      .layer-btn.active {
+        background: var(--accent-blue);
+        color: white;
+        border-color: transparent;
+      }
+
+      /* === 4D BOARD === */
+      .board-4d {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: 20px repeat(4, 1fr);
+        gap: var(--space-xs);
+        touch-action: none;
+      }
+
+      .column {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+      }
+
+      .column-indicator {
+        height: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-height: var(--touch-min);
+      }
+
+      .column-indicator:active {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(0.95);
+      }
+
+      .cell {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        min-height: 0; /* Important for flex scaling */
+        aspect-ratio: 1;
+      }
+
+      .cell:active {
+        background: rgba(255, 255, 255, 0.1);
+        transform: scale(0.98);
+      }
+
+      .piece {
+        width: 85%;
+        height: 85%;
+        border-radius: 50%;
+        position: relative;
+        box-shadow: inset 0 3px 5px rgba(255, 255, 255, 0.3);
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transform: scale(0);
+      }
+
+      .piece.animate {
+        transform: scale(1);
+      }
+
+      .piece.p1 {
+        background: linear-gradient(135deg, var(--accent-blue), #1d4ed8);
+        box-shadow: 0 0 15px var(--accent-blue);
+      }
+
+      .piece.p2 {
+        background: linear-gradient(135deg, var(--accent-pink), #be185d);
+        box-shadow: 0 0 15px var(--accent-pink);
+      }
+
+      /* === SIDEBAR (MOBILE BOTTOM BAR) === */
+      .sidebar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-md);
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        padding: var(--space-md);
+        margin-top: auto;
+      }
+
+      /* === PLAYER INFO === */
+      .player-info {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: var(--space-md);
+        transition: all 0.2s ease;
+      }
+
+      .player-info.active {
+        border-color: var(--accent-blue);
+        background: rgba(59, 130, 246, 0.15);
+      }
+
+      .player-info.p2.active {
+        border-color: var(--accent-pink);
+        background: rgba(236, 72, 153, 0.15);
+      }
+
+      .player-header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-sm);
+      }
+
+      .player-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--text-lg);
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .player-icon.p1 {
+        background: var(--accent-blue);
+        box-shadow: 0 0 10px var(--accent-blue);
+      }
+
+      .player-icon.p2 {
+        background: var(--accent-pink);
+        box-shadow: 0 0 10px var(--accent-pink);
+      }
+
+      .player-name {
+        font-size: var(--text-sm);
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .player-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-xs);
+        font-size: var(--text-xs);
+      }
+
+      .stat {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: var(--text-lg);
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .stat-label {
+        color: var(--text-dim);
+        font-size: var(--text-xs);
+        margin-top: 2px;
+      }
+
+      /* === GAME CONTROLS === */
+      .game-controls {
+        grid-column: 1 / -1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: var(--space-md);
+      }
+
+      .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--space-xs);
+      }
+
+      .control-btn {
+        padding: var(--space-sm);
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-md);
+        color: var(--text-light);
+        font-weight: 600;
+        font-size: var(--text-xs);
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        min-height: 50px;
+      }
+
+      .control-btn:active {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(0.95);
+      }
+
+      .control-btn span {
+        font-size: 1.2rem;
+      }
+
+      .control-btn.primary {
+        grid-column: 1 / -1;
+        background: linear-gradient(
+          135deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+        border: none;
+        min-height: var(--touch-large);
+        font-size: var(--text-sm);
+      }
+
+      /* === GAME STATUS === */
+      .game-status {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: var(--space-md);
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-lg);
+        margin-top: var(--space-sm);
+      }
+
+      .status-text {
+        font-size: var(--text-base);
+        font-weight: 600;
+        color: var(--accent-cyan);
+        margin-bottom: var(--space-xs);
+      }
+
+      .move-info {
+        font-size: var(--text-sm);
+        color: var(--text-dim);
+      }
+
+      /* === WIN SCREEN === */
+      .win-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(5, 5, 5, 0.98);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        backdrop-filter: blur(20px);
+        padding: var(--space-md);
+      }
+
+      .win-content {
+        background: var(--bg-glass);
+        padding: var(--space-xl);
+        border-radius: var(--radius-2xl);
+        text-align: center;
+        width: 100%;
+        max-width: 400px;
+        border: 1px solid var(--border-glass);
+        animation: scaleIn 0.3s ease;
+      }
+
+      @keyframes scaleIn {
+        from {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .winner-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin: 0 auto var(--space-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+      }
+
+      .winner-icon.p1 {
+        background: linear-gradient(135deg, var(--accent-blue), #1d4ed8);
+        box-shadow: 0 0 30px var(--accent-blue);
+      }
+
+      .winner-icon.p2 {
+        background: linear-gradient(135deg, var(--accent-pink), #be185d);
+        box-shadow: 0 0 30px var(--accent-pink);
+      }
+
+      .win-title {
+        font-size: clamp(1.5rem, 6vw, 2rem);
+        font-weight: 800;
+        background: linear-gradient(
+          90deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: var(--space-lg);
+      }
+
+      .win-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-md);
+        margin: var(--space-lg) 0;
+      }
+
+      .win-buttons {
+        display: flex;
+        gap: var(--space-md);
+        margin-top: var(--space-xl);
+      }
+
+      .win-buttons .control-btn {
+        flex: 1;
+        min-height: var(--touch-large);
+        font-size: var(--text-sm);
+      }
+
+      /* === ANIMATIONS === */
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.5;
+        }
+        50% {
+          transform: scale(1.1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes fall {
+        from {
+          transform: translateY(-50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* === HOVER STATES FOR MOBILE === */
+      @media (hover: hover) and (pointer: fine) {
+        .back-btn:hover {
+          background: var(--accent-blue);
+          color: white;
+          transform: translateX(-5px);
+        }
+
+        .mode-card:hover {
+          transform: translateY(-5px);
+          border-color: var(--accent-blue);
+          box-shadow: var(--glow-blue);
+        }
+
+        .diff-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+          transform: translateY(-2px);
+        }
+
+        .start-btn:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 30px rgba(59, 130, 246, 0.6);
+        }
+
+        .layer-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .cell:hover {
+          background: rgba(255, 255, 255, 0.1);
+          transform: scale(1.05);
+        }
+
+        .control-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .column-indicator:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+      }
+
+      /* === TABLET (768px+) === */
+      @media (min-width: 768px) {
+        .game-container {
+          padding: max(20px, env(safe-area-inset-top)) var(--space-lg)
+            max(20px, env(safe-area-inset-bottom));
+        }
+
+        .game-area {
+          flex-direction: row;
+          height: calc(100vh - 80px);
+          gap: var(--space-lg);
+        }
+
+        .board-container {
+          flex: 2;
+        }
+
+        .sidebar {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-width: 280px;
+        }
+
+        .instruction-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .mode-selector {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .difficulty-buttons {
+          grid-template-columns: repeat(4, 1fr);
+        }
+
+        .player-stats {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .controls-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .control-btn.primary {
+          grid-column: span 2;
+        }
+      }
+
+      /* === DESKTOP (1024px+) === */
+      @media (min-width: 1024px) {
+        .game-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: max(20px, env(safe-area-inset-top)) var(--space-xl)
+            max(20px, env(safe-area-inset-bottom));
+        }
+
+        .instruction-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+
+        .mode-selector {
+          grid-template-columns: repeat(4, 1fr);
+        }
+
+        .board-4d {
+          gap: var(--space-sm);
+        }
+
+        .cell {
+          border-radius: var(--radius-lg);
+        }
+      }
+
+      /* === LARGE DESKTOP (1440px+) === */
+      @media (min-width: 1440px) {
+        :root {
+          --touch-min: 48px;
+          --touch-large: 70px;
+        }
+
+        .game-container {
+          max-width: 1400px;
+        }
+
+        .board-container {
+          padding: var(--space-lg);
+        }
+
+        .sidebar {
+          min-width: 320px;
+        }
+      }
+
+      /* === ORIENTATION SPECIFIC === */
+      @media (orientation: landscape) and (max-height: 600px) {
+        .game-area {
+          flex-direction: row;
+          height: calc(100vh - 60px);
+        }
+
+        .board-container {
+          flex: 2;
+        }
+
+        .sidebar {
+          flex: 1;
+          flex-direction: column;
+        }
+
+        .player-stats {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      /* === DARK MODE SUPPORT === */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg-glass: rgba(20, 30, 48, 0.95);
+          --border-glass: rgba(255, 255, 255, 0.2);
+        }
+      }
+
+      /* === HIGH CONTRAST MODE === */
+      @media (prefers-contrast: high) {
+        :root {
+          --text-light: #ffffff;
+          --text-dim: #cccccc;
+          --border-glass: rgba(255, 255, 255, 0.3);
+        }
+
+        .piece.p1,
+        .piece.p2 {
+          box-shadow: 0 0 20px currentColor;
+        }
+      }
+
+      /* === REDUCED MOTION === */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+
+        .piece {
+          transition: none;
+        }
+      }
+
+      /* === FONT LOADING FALLBACK === */
+      @supports not (font-variation-settings: normal) {
+        body {
+          font-family:
+            -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial,
+            sans-serif;
+        }
+      }
+
+      /* === iOS SAFARI FIXES === */
+      @supports (-webkit-touch-callout: none) {
+        .start-screen,
+        .win-screen {
+          height: -webkit-fill-available;
+        }
+
+        .game-container {
+          height: -webkit-fill-available;
+        }
+
+        .board-4d {
+          -webkit-touch-callout: none;
+        }
+      }
+    </style>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Back Button -->
+    <a href="index.html" class="back-btn"> ← Back to OS </a>
+
+    <!-- Start Screen -->
+    <div class="start-screen" id="startScreen">
+      <h1 class="start-title">QUANTUM CONNECT</h1>
+      <div class="start-subtitle">4D Connect Four with Gravity Mechanics</div>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        <h2>⚡ HOW TO PLAY</h2>
+        <div class="instruction-grid">
+          <div class="instruction-card">
+            <div class="icon">🎯</div>
+            <h3>Objective</h3>
+            <p>
+              Connect 4 of your pieces in a row in any direction (including
+              across layers)
+            </p>
+          </div>
+          <div class="instruction-card">
+            <div class="icon">🌌</div>
+            <h3>4D Board</h3>
+            <p>
+              4 layers of 4×4 boards. Play on any layer, but pieces fall through
+              gravity
+            </p>
+          </div>
+          <div class="instruction-card">
+            <div class="icon">⬇️</div>
+            <h3>Gravity</h3>
+            <p>
+              Pieces fall to the bottom of their column, and continue down
+              through layers
+            </p>
+          </div>
+          <div class="instruction-card">
+            <div class="icon">🎮</div>
+            <h3>Strategy</h3>
+            <p>
+              Think in 4D! Block opponents across layers and plan multi-layer
+              connections
+            </p>
+          </div>
+        </div>
+
+        <div class="how-to-play">
+          <h3>🎮 Quick Start:</h3>
+          <ol>
+            <li>
+              <strong>Click any column</strong> on the current active layer
+            </li>
+            <li>
+              Your piece will <strong>fall to the lowest empty cell</strong> in
+              that column
+            </li>
+            <li>
+              If the cell below is empty, it
+              <strong>falls to the next layer</strong>
+            </li>
+            <li>
+              Switch layers using <strong>Layer 1-4 buttons</strong> to view
+              different levels
+            </li>
+            <li>
+              <strong>Connect 4 in any straight line</strong> (horizontal,
+              vertical, diagonal, or through layers)
+            </li>
+          </ol>
+          <p
+            style="
+              color: var(--accent-yellow);
+              margin-top: 15px;
+              font-weight: 600;
+            "
+          >
+            Pro Tip: Use gravity to your advantage! Drop pieces through layers
+            to create unexpected connections!
+          </p>
+        </div>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="mode-selector">
+        <div
+          class="mode-card"
+          data-mode="single"
+          onclick="selectMode('single')"
+        >
+          <div class="mode-icon">🤖</div>
+          <div class="mode-title">VS QUANTUM AI</div>
+          <div class="mode-desc">
+            Challenge the advanced AI with 4D thinking capabilities
+          </div>
+        </div>
+
+        <div class="mode-card" data-mode="multi" onclick="selectMode('multi')">
+          <div class="mode-icon">👥</div>
+          <div class="mode-title">MULTIPLAYER</div>
+          <div class="mode-desc">
+            Play with a friend on the same device - perfect for strategic
+            battles
+          </div>
+        </div>
+
+        <div
+          class="mode-card"
+          data-mode="puzzle"
+          onclick="selectMode('puzzle')"
+        >
+          <div class="mode-icon">🧩</div>
+          <div class="mode-title">PUZZLE MODE</div>
+          <div class="mode-desc">
+            Solve challenging puzzles in 10 moves or less
+          </div>
+        </div>
+
+        <div class="mode-card" data-mode="race" onclick="selectMode('race')">
+          <div class="mode-icon">⚡</div>
+          <div class="mode-title">SPEED RACE</div>
+          <div class="mode-desc">
+            Fast-paced games with 30-second time limits per move
+          </div>
+        </div>
+      </div>
+
+      <!-- Difficulty Selector -->
+      <div class="difficulty-selector" id="difficultySelector">
+        <div
+          class="difficulty-title"
+          style="margin-bottom: 15px; color: var(--text-dim)"
+        >
+          Select AI Difficulty
+        </div>
+        <div class="difficulty-buttons">
+          <button
+            class="diff-btn"
+            data-diff="novice"
+            onclick="selectDifficulty('novice')"
+          >
+            Novice
+          </button>
+          <button
+            class="diff-btn active"
+            data-diff="strategist"
+            onclick="selectDifficulty('strategist')"
+          >
+            Strategist
+          </button>
+          <button
+            class="diff-btn"
+            data-diff="master"
+            onclick="selectDifficulty('master')"
+          >
+            Master
+          </button>
+          <button
+            class="diff-btn"
+            data-diff="quantum"
+            onclick="selectDifficulty('quantum')"
+          >
+            Quantum
+          </button>
+        </div>
+      </div>
+
+      <button class="start-btn" onclick="startGame()" id="startBtn">
+        Start Quantum Connect
+      </button>
+    </div>
+
+    <!-- Game Container -->
+    <div class="game-container" id="gameContainer">
+      <!-- Header -->
+      <div class="game-header">
+        <div class="game-title">QUANTUM CONNECT</div>
+        <div class="mode-indicator" id="modeIndicator">VS AI • Strategist</div>
+      </div>
+
+      <!-- Main Game Area -->
+      <div class="game-area">
+        <!-- Board Area -->
+        <div class="board-container">
+          <!-- Layer Controls -->
+          <div class="layer-controls">
+            <button class="layer-btn active" onclick="switchLayer(0)">
+              Layer 1
+            </button>
+            <button class="layer-btn" onclick="switchLayer(1)">Layer 2</button>
+            <button class="layer-btn" onclick="switchLayer(2)">Layer 3</button>
+            <button class="layer-btn" onclick="switchLayer(3)">Layer 4</button>
+            <button class="layer-btn" onclick="toggleView()" id="viewToggle">
+              3D View
+            </button>
+          </div>
+
+          <!-- 4D Board -->
+          <div id="board4d" class="board-4d">
+            <!-- Board will be generated here -->
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <!-- Player 1 Info -->
+          <div class="player-info active" id="player1">
+            <div class="player-header">
+              <div class="player-icon p1">X</div>
+              <div class="player-name">PLAYER 1</div>
+            </div>
+            <div class="player-stats">
+              <div class="stat">
+                <div class="stat-value" id="p1Wins">0</div>
+                <div class="stat-label">Wins</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" id="p1Moves">0</div>
+                <div class="stat-label">Moves</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" id="p1Time">0:00</div>
+                <div class="stat-label">Time</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Player 2 Info -->
+          <div class="player-info" id="player2">
+            <div class="player-header">
+              <div class="player-icon p2">O</div>
+              <div class="player-name" id="player2Name">QUANTUM AI</div>
+            </div>
+            <div class="player-stats">
+              <div class="stat">
+                <div class="stat-value" id="p2Wins">0</div>
+                <div class="stat-label">Wins</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" id="p2Moves">0</div>
+                <div class="stat-label">Moves</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" id="p2Time">0:00</div>
+                <div class="stat-label">Time</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game Controls -->
+          <div class="game-controls">
+            <div class="controls-grid">
+              <button class="control-btn" onclick="newGame()">
+                <span>🔄</span> New Game
+              </button>
+              <button class="control-btn" onclick="undoMove()">
+                <span>↩️</span> Undo
+              </button>
+              <button class="control-btn" onclick="toggleSound()" id="soundBtn">
+                <span>🔊</span> Sound
+              </button>
+              <button class="control-btn" onclick="toggleHint()" id="hintBtn">
+                <span>💡</span> Hint
+              </button>
+              <button class="control-btn primary" onclick="backToMenu()">
+                <span>←</span> Main Menu
+              </button>
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="game-controls">
+            <div style="text-align: center">
+              <div
+                style="
+                  font-size: 0.9rem;
+                  color: var(--text-dim);
+                  margin-bottom: 8px;
+                "
+              >
+                Status
+              </div>
+              <div
+                style="
+                  font-size: 1.1rem;
+                  font-weight: 600;
+                  color: var(--accent-cyan);
+                "
+                id="gameStatus"
+              >
+                Player 1's Turn
+              </div>
+              <div
+                style="
+                  font-size: 0.8rem;
+                  color: var(--text-dim);
+                  margin-top: 10px;
+                "
+                id="moveInfo"
+              >
+                Click any column to drop your piece
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Win Screen -->
+    <div class="win-screen" id="winScreen">
+      <div class="win-content">
+        <div class="winner-icon" id="winnerIcon"></div>
+        <div class="win-title" id="winTitle">QUANTUM VICTORY!</div>
+        <div
+          class="stats-grid"
+          style="grid-template-columns: repeat(2, 1fr); margin: 30px 0"
+        >
+          <div class="stat">
+            <div class="stat-value" id="winMoves">0</div>
+            <div class="stat-label">Total Moves</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="winTime">0:00</div>
+            <div class="stat-label">Game Time</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="winLayer">1</div>
+            <div class="stat-label">Winning Layer</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="winMode">VS AI</div>
+            <div class="stat-label">Game Mode</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 15px; margin-top: 30px">
+          <button
+            class="control-btn primary"
+            style="flex: 1"
+            onclick="playAgain()"
+          >
+            <span>🎮</span> Play Again
+          </button>
+          <button class="control-btn" style="flex: 1" onclick="backToMenu()">
+            <span>←</span> Main Menu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ===== GAME STATE =====
+      const gameState = {
+        // Game configuration
+        mode: "single", // single, multi, puzzle, race
+        difficulty: "strategist",
+
+        // Board state: 4 layers of 4x4 grids
+        board: Array(4)
+          .fill()
+          .map(() =>
+            Array(4)
+              .fill()
+              .map(() => Array(4).fill(null)),
+          ),
+
+        // Game state
+        currentPlayer: 1, // 1 or 2
+        currentLayer: 0, // 0-3
+        gameActive: true,
+        gameStartTime: null,
+        moveCount: 0,
+        scores: { p1: 0, p2: 0 },
+        moveHistory: [],
+
+        // Player times (for race mode)
+        playerTimes: { p1: 0, p2: 0 },
+        lastMoveTime: null,
+
+        // Settings
+        soundEnabled: true,
+        hintsEnabled: true,
+        is3DView: false,
+
+        // AI state
+        aiThinking: false,
+        aiDepth: {
+          novice: 1,
+          strategist: 3,
+          master: 5,
+          quantum: 7,
+        },
+      };
+
+      // ===== START SCREEN FUNCTIONS =====
+      function selectMode(mode) {
+        gameState.mode = mode;
+
+        document.querySelectorAll(".mode-card").forEach((card) => {
+          card.classList.toggle("active", card.dataset.mode === mode);
+        });
+
+        const diffSelector = document.getElementById("difficultySelector");
+        const startBtn = document.getElementById("startBtn");
+
+        if (mode === "single") {
+          diffSelector.classList.add("show");
+          startBtn.textContent = "Challenge Quantum AI";
+        } else {
+          diffSelector.classList.remove("show");
+          startBtn.textContent = `Start ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`;
+        }
+      }
+
+      function selectDifficulty(difficulty) {
+        gameState.difficulty = difficulty;
+
+        document.querySelectorAll(".diff-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.diff === difficulty);
+        });
+      }
+
+      function startGame() {
+        document.getElementById("startScreen").style.display = "none";
+        document.getElementById("gameContainer").style.display = "block";
+
+        // Update UI based on mode
+        const modeIndicator = document.getElementById("modeIndicator");
+        const player2Name = document.getElementById("player2Name");
+
+        if (gameState.mode === "single") {
+          modeIndicator.textContent = `VS AI • ${gameState.difficulty.charAt(0).toUpperCase() + gameState.difficulty.slice(1)}`;
+          player2Name.textContent = "QUANTUM AI";
+        } else if (gameState.mode === "multi") {
+          modeIndicator.textContent = "MULTIPLAYER";
+          player2Name.textContent = "PLAYER 2";
+        } else {
+          modeIndicator.textContent = gameState.mode.toUpperCase();
+          player2Name.textContent =
+            gameState.mode === "puzzle" ? "PUZZLE" : "OPPONENT";
+        }
+
+        initializeGame();
+      }
+
+      function backToMenu() {
+        document.getElementById("gameContainer").style.display = "none";
+        document.getElementById("winScreen").style.display = "none";
+        document.getElementById("startScreen").style.display = "flex";
+        gameState.gameActive = false;
+      }
+
+      // ===== GAME INITIALIZATION =====
+      function initializeGame() {
+        // Reset board
+        gameState.board = Array(4)
+          .fill()
+          .map(() =>
+            Array(4)
+              .fill()
+              .map(() => Array(4).fill(null)),
+          );
+
+        // Reset game state
+        gameState.currentPlayer = 1;
+        gameState.currentLayer = 0;
+        gameState.gameActive = true;
+        gameState.gameStartTime = Date.now();
+        gameState.moveCount = 0;
+        gameState.moveHistory = [];
+        gameState.playerTimes = { p1: 0, p2: 0 };
+        gameState.lastMoveTime = Date.now();
+        gameState.aiThinking = false;
+
+        // Update UI
+        updatePlayerIndicators();
+        updateStats();
+        renderBoard();
+        updateGameStatus("Player 1's Turn");
+
+        // Start timer for race mode
+        if (gameState.mode === "race") {
+          startRaceTimer();
+        }
+      }
+
+      // ===== BOARD RENDERING =====
+      function renderBoard() {
+        const boardContainer = document.getElementById("board4d");
+        boardContainer.innerHTML = "";
+
+        // Create column indicators
+        for (let col = 0; col < 4; col++) {
+          const columnDiv = document.createElement("div");
+          columnDiv.className = "column";
+          columnDiv.style.gridColumn = col + 1;
+          columnDiv.style.gridRow = 1;
+
+          const indicator = document.createElement("div");
+          indicator.className = "column-indicator";
+          indicator.dataset.column = col;
+          indicator.onclick = () => makeMove(col);
+          indicator.onmouseenter = () => showColumnHover(col);
+          indicator.onmouseleave = () => hideColumnHover();
+          columnDiv.appendChild(indicator);
+
+          // Create cells for this column
+          for (let row = 0; row < 4; row++) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.dataset.layer = gameState.currentLayer;
+            cell.dataset.row = row;
+            cell.dataset.column = col;
+
+            const piece = gameState.board[gameState.currentLayer][row][col];
+            if (piece) {
+              const pieceDiv = document.createElement("div");
+              pieceDiv.className = `piece ${piece === 1 ? "p1" : "p2"}`;
+              pieceDiv.style.animation = `fall 0.3s ease`;
+              cell.appendChild(pieceDiv);
+            }
+
+            columnDiv.appendChild(cell);
+          }
+
+          boardContainer.appendChild(columnDiv);
+        }
+
+        // Update layer buttons
+        document.querySelectorAll(".layer-btn").forEach((btn, index) => {
+          btn.classList.toggle("active", index === gameState.currentLayer);
+          btn.classList.toggle("inactive", index !== gameState.currentLayer);
+        });
+
+        // Show winning lines if any
+        checkAndShowWins();
+      }
+
+      function showColumnHover(column) {
+        if (!gameState.gameActive || gameState.aiThinking) return;
+
+        document.querySelectorAll(".cell").forEach((cell) => {
+          if (parseInt(cell.dataset.column) === column) {
+            cell.classList.add(`hover-p${gameState.currentPlayer}`);
+          }
+        });
+      }
+
+      function hideColumnHover() {
+        document.querySelectorAll(".cell").forEach((cell) => {
+          cell.classList.remove("hover-p1", "hover-p2");
+        });
+      }
+
+      // ===== GAME LOGIC =====
+      function makeMove(column) {
+        if (!gameState.gameActive || gameState.aiThinking) return;
+        if (gameState.mode === "single" && gameState.currentPlayer === 2)
+          return;
+
+        // Find the lowest empty cell in the column across all layers
+        let targetLayer = gameState.currentLayer;
+        let targetRow = -1;
+
+        // Check from top layer down
+        for (let layer = 0; layer < 4; layer++) {
+          for (let row = 3; row >= 0; row--) {
+            if (!gameState.board[layer][row][column]) {
+              // Check if cell below is occupied or if it's the bottom layer
+              if (layer === 3 || gameState.board[layer + 1][row][column]) {
+                targetLayer = layer;
+                targetRow = row;
+                break;
+              }
+            }
+          }
+          if (targetRow !== -1) break;
+        }
+
+        if (targetRow === -1) {
+          // Column is full
+          playSound(200, "sine");
+          updateGameStatus("Column is full!");
+          return;
+        }
+
+        // Make the move
+        gameState.board[targetLayer][targetRow][column] =
+          gameState.currentPlayer;
+        gameState.moveHistory.push({
+          layer: targetLayer,
+          row: targetRow,
+          column: column,
+          player: gameState.currentPlayer,
+        });
+
+        gameState.moveCount++;
+        updateStats();
+        playSound(gameState.currentPlayer === 1 ? 500 : 400, "square");
+
+        // Animate the piece
+        setTimeout(() => {
+          renderBoard();
+
+          // Check for win
+          const winResult = checkWin(targetLayer, targetRow, column);
+          if (winResult) {
+            gameWin(winResult);
+            return;
+          }
+
+          // Check for draw
+          if (gameState.moveCount >= 64) {
+            // 4x4x4 = 64 cells
+            gameDraw();
+            return;
+          }
+
+          // Switch player
+          gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
+          updatePlayerIndicators();
+
+          // Update game status
+          if (gameState.mode === "single" && gameState.currentPlayer === 2) {
+            updateGameStatus("AI is thinking...");
+            gameState.aiThinking = true;
+            setTimeout(makeAIMove, 800);
+          } else if (gameState.mode === "race") {
+            updateGameStatus(
+              `Player ${gameState.currentPlayer}'s Turn - ${getTimeLeft()}s left`,
+            );
+            startRaceTimer();
+          } else {
+            updateGameStatus(`Player ${gameState.currentPlayer}'s Turn`);
+          }
+        }, 300);
+      }
+
+      function makeAIMove() {
+        if (!gameState.gameActive || gameState.currentPlayer !== 2) return;
+
+        const move = getBestMove();
+        if (move) {
+          setTimeout(() => {
+            makeMove(move.column);
+            gameState.aiThinking = false;
+          }, 500);
+        }
+      }
+
+      function getBestMove() {
+        const difficulty = gameState.difficulty;
+        const depth = gameState.aiDepth[difficulty];
+
+        // Get all valid moves
+        const validMoves = [];
+        for (let col = 0; col < 4; col++) {
+          // Check if column has space
+          for (let layer = 0; layer < 4; layer++) {
+            for (let row = 3; row >= 0; row--) {
+              if (!gameState.board[layer][row][col]) {
+                if (layer === 3 || gameState.board[layer + 1][row][col]) {
+                  validMoves.push({ column: col, layer: layer, row: row });
+                  break;
+                }
+              }
+            }
+            if (validMoves.some((m) => m.column === col)) break;
+          }
+        }
+
+        // Different AI strategies based on difficulty
+        switch (difficulty) {
+          case "novice":
+            // Random move
+            return validMoves[Math.floor(Math.random() * validMoves.length)];
+
+          case "strategist":
+            // Try to win, otherwise random
+            for (let move of validMoves) {
+              gameState.board[move.layer][move.row][move.column] = 2;
+              if (checkWin(move.layer, move.row, move.column)) {
+                gameState.board[move.layer][move.row][move.column] = null;
+                return move;
+              }
+              gameState.board[move.layer][move.row][move.column] = null;
+            }
+
+            // Block player
+            for (let move of validMoves) {
+              gameState.board[move.layer][move.row][move.column] = 1;
+              if (checkWin(move.layer, move.row, move.column)) {
+                gameState.board[move.layer][move.row][move.column] = null;
+                return move;
+              }
+              gameState.board[move.layer][move.row][move.column] = null;
+            }
+
+            // Center preference
+            const centerMoves = validMoves.filter(
+              (m) => m.column === 1 || m.column === 2,
+            );
+            if (centerMoves.length > 0) {
+              return centerMoves[
+                Math.floor(Math.random() * centerMoves.length)
+              ];
+            }
+
+            return validMoves[Math.floor(Math.random() * validMoves.length)];
+
+          case "master":
+          case "quantum":
+            // Use minimax with increasing depth
+            let bestScore = -Infinity;
+            let bestMove = validMoves[0];
+
+            for (let move of validMoves) {
+              gameState.board[move.layer][move.row][move.column] = 2;
+              const score = minimax(depth - 1, false, -Infinity, Infinity);
+              gameState.board[move.layer][move.row][move.column] = null;
+
+              if (score > bestScore) {
+                bestScore = score;
+                bestMove = move;
+              }
+            }
+
+            return bestMove;
+        }
+
+        return validMoves[0];
+      }
+
+      function minimax(depth, isMaximizing, alpha, beta) {
+        // Check terminal states
+        const win = checkAnyWin();
+        if (win && win.player === 2) return 1000 + depth;
+        if (win && win.player === 1) return -1000 - depth;
+        if (depth === 0 || gameState.moveCount >= 64) return evaluateBoard();
+
+        const validMoves = getAllValidMoves();
+
+        if (isMaximizing) {
+          let maxEval = -Infinity;
+          for (let move of validMoves) {
+            gameState.board[move.layer][move.row][move.column] = 2;
+            const eval = minimax(depth - 1, false, alpha, beta);
+            gameState.board[move.layer][move.row][move.column] = null;
+
+            maxEval = Math.max(maxEval, eval);
+            alpha = Math.max(alpha, eval);
+            if (beta <= alpha) break;
+          }
+          return maxEval;
+        } else {
+          let minEval = Infinity;
+          for (let move of validMoves) {
+            gameState.board[move.layer][move.row][move.column] = 1;
+            const eval = minimax(depth - 1, true, alpha, beta);
+            gameState.board[move.layer][move.row][move.column] = null;
+
+            minEval = Math.min(minEval, eval);
+            beta = Math.min(beta, eval);
+            if (beta <= alpha) break;
+          }
+          return minEval;
+        }
+      }
+
+      function evaluateBoard() {
+        let score = 0;
+
+        // Evaluate all possible lines
+        const lines = getAllLines();
+        for (let line of lines) {
+          let player1Count = 0;
+          let player2Count = 0;
+
+          for (let cell of line) {
+            const val = gameState.board[cell.layer][cell.row][cell.column];
+            if (val === 1) player1Count++;
+            if (val === 2) player2Count++;
+          }
+
+          // Score based on threats
+          if (player1Count > 0 && player2Count === 0) {
+            score -= Math.pow(10, player1Count);
+          } else if (player2Count > 0 && player1Count === 0) {
+            score += Math.pow(10, player2Count);
+          }
+        }
+
+        // Center control bonus
+        for (let layer = 0; layer < 4; layer++) {
+          for (let row = 1; row <= 2; row++) {
+            for (let col = 1; col <= 2; col++) {
+              const val = gameState.board[layer][row][col];
+              if (val === 1) score -= 5;
+              if (val === 2) score += 5;
+            }
+          }
+        }
+
+        return score;
+      }
+
+      function getAllValidMoves() {
+        const moves = [];
+        for (let col = 0; col < 4; col++) {
+          for (let layer = 0; layer < 4; layer++) {
+            for (let row = 3; row >= 0; row--) {
+              if (!gameState.board[layer][row][col]) {
+                if (layer === 3 || gameState.board[layer + 1][row][col]) {
+                  moves.push({ column: col, layer: layer, row: row });
+                  break;
+                }
+              }
+            }
+            if (moves.some((m) => m.column === col)) break;
+          }
+        }
+        return moves;
+      }
+
+      function getAllLines() {
+        const lines = [];
+
+        // Generate all possible winning lines in 4D
+        // This is simplified - in a real 4D game, there would be more lines
+        for (let layer = 0; layer < 4; layer++) {
+          // Rows
+          for (let row = 0; row < 4; row++) {
+            lines.push(
+              [0, 1, 2, 3].map((col) => ({ layer, row, column: col })),
+            );
+          }
+
+          // Columns
+          for (let col = 0; col < 4; col++) {
+            lines.push(
+              [0, 1, 2, 3].map((row) => ({ layer, row, column: col })),
+            );
+          }
+
+          // Diagonals
+          lines.push([0, 1, 2, 3].map((i) => ({ layer, row: i, column: i })));
+          lines.push(
+            [0, 1, 2, 3].map((i) => ({ layer, row: i, column: 3 - i })),
+          );
+        }
+
+        // Vertical lines through layers
+        for (let row = 0; row < 4; row++) {
+          for (let col = 0; col < 4; col++) {
+            lines.push(
+              [0, 1, 2, 3].map((layer) => ({ layer, row, column: col })),
+            );
+          }
+        }
+
+        // 3D diagonals
+        lines.push([0, 1, 2, 3].map((i) => ({ layer: i, row: i, column: i })));
+        lines.push(
+          [0, 1, 2, 3].map((i) => ({ layer: i, row: i, column: 3 - i })),
+        );
+        lines.push(
+          [0, 1, 2, 3].map((i) => ({ layer: i, row: 3 - i, column: i })),
+        );
+        lines.push(
+          [0, 1, 2, 3].map((i) => ({ layer: i, row: 3 - i, column: 3 - i })),
+        );
+
+        return lines;
+      }
+
+      // ===== WIN DETECTION =====
+      function checkWin(layer, row, column) {
+        const player = gameState.board[layer][row][column];
+        if (!player) return null;
+
+        // Check all directions
+        const directions = [
+          // Horizontal
+          { dl: 0, dr: 0, dc: 1 },
+          // Vertical
+          { dl: 0, dr: 1, dc: 0 },
+          // Depth (through layers)
+          { dl: 1, dr: 0, dc: 0 },
+          // Diagonal in layer
+          { dl: 0, dr: 1, dc: 1 },
+          { dl: 0, dr: 1, dc: -1 },
+          // Diagonal through layers
+          { dl: 1, dr: 1, dc: 0 },
+          { dl: 1, dr: 0, dc: 1 },
+          { dl: 1, dr: 1, dc: 1 },
+          { dl: 1, dr: 1, dc: -1 },
+        ];
+
+        for (let dir of directions) {
+          let count = 1;
+          const winningCells = [{ layer, row, column }];
+
+          // Check positive direction
+          for (let i = 1; i < 4; i++) {
+            const l = layer + i * dir.dl;
+            const r = row + i * dir.dr;
+            const c = column + i * dir.dc;
+
+            if (l < 0 || l >= 4 || r < 0 || r >= 4 || c < 0 || c >= 4) break;
+            if (gameState.board[l][r][c] !== player) break;
+
+            count++;
+            winningCells.push({ layer: l, row: r, column: c });
+          }
+
+          // Check negative direction
+          for (let i = 1; i < 4; i++) {
+            const l = layer - i * dir.dl;
+            const r = row - i * dir.dr;
+            const c = column - i * dir.dc;
+
+            if (l < 0 || l >= 4 || r < 0 || r >= 4 || c < 0 || c >= 4) break;
+            if (gameState.board[l][r][c] !== player) break;
+
+            count++;
+            winningCells.push({ layer: l, row: r, column: c });
+          }
+
+          if (count >= 4) {
+            return {
+              player: player,
+              cells: winningCells,
+              direction: dir,
+            };
+          }
+        }
+
+        return null;
+      }
+
+      function checkAnyWin() {
+        // Check all cells for wins
+        for (let layer = 0; layer < 4; layer++) {
+          for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 4; col++) {
+              if (gameState.board[layer][row][col]) {
+                const win = checkWin(layer, row, col);
+                if (win) return win;
+              }
+            }
+          }
+        }
+        return null;
+      }
+
+      function checkAndShowWins() {
+        const win = checkAnyWin();
+        if (win) {
+          showWinningLine(win.cells);
+        }
+      }
+
+      function showWinningLine(cells) {
+        // Remove any existing winning lines
+        document.querySelectorAll(".winning-line").forEach((el) => el.remove());
+
+        // Create winning line visualization
+        const boardContainer = document.getElementById("board4d");
+        cells.forEach((cell) => {
+          const line = document.createElement("div");
+          line.className = "winning-line";
+
+          // Position based on cell coordinates
+          const cellSize = boardContainer.offsetWidth / 4;
+          line.style.width = `${cellSize - 8}px`;
+          line.style.height = `${cellSize - 8}px`;
+          line.style.left = `${cell.column * cellSize + 4}px`;
+          line.style.top = `${cell.row * cellSize + 4}px`;
+
+          boardContainer.appendChild(line);
+        });
+      }
+
+      // ===== GAME END =====
+      function gameWin(winResult) {
+        gameState.gameActive = false;
+
+        // Update scores
+        if (winResult.player === 1) {
+          gameState.scores.p1++;
+          document.getElementById("p1Wins").textContent = gameState.scores.p1;
+        } else {
+          gameState.scores.p2++;
+          document.getElementById("p2Wins").textContent = gameState.scores.p2;
+        }
+
+        // Show win screen
+        showWinScreen(winResult);
+        playSound(800, "sine", 0.5);
+      }
+
+      function gameDraw() {
+        gameState.gameActive = false;
+
+        // Show draw screen
+        document.getElementById("winnerIcon").innerHTML = "🤝";
+        document.getElementById("winTitle").textContent = "QUANTUM DRAW!";
+        document.getElementById("winMoves").textContent = gameState.moveCount;
+        document.getElementById("winTime").textContent = formatTime(
+          (Date.now() - gameState.gameStartTime) / 1000,
+        );
+        document.getElementById("winLayer").textContent = "N/A";
+        document.getElementById("winMode").textContent =
+          gameState.mode.toUpperCase();
+
+        document.getElementById("winScreen").style.display = "flex";
+        playSound(600, "sine", 0.3);
+      }
+
+      function showWinScreen(winResult) {
+        const winnerIcon = document.getElementById("winnerIcon");
+        winnerIcon.className = `winner-icon ${winResult.player === 1 ? "p1" : "p2"}`;
+        winnerIcon.textContent = winResult.player === 1 ? "X" : "O";
+
+        document.getElementById("winTitle").textContent =
+          gameState.mode === "single" && winResult.player === 2
+            ? "AI WINS!"
+            : gameState.mode === "puzzle"
+              ? "PUZZLE SOLVED!"
+              : `PLAYER ${winResult.player} WINS!`;
+
+        document.getElementById("winMoves").textContent = gameState.moveCount;
+        document.getElementById("winTime").textContent = formatTime(
+          (Date.now() - gameState.gameStartTime) / 1000,
+        );
+        document.getElementById("winLayer").textContent =
+          winResult.cells[0].layer + 1;
+        document.getElementById("winMode").textContent =
+          gameState.mode.toUpperCase();
+
+        document.getElementById("winScreen").style.display = "flex";
+      }
+
+      function playAgain() {
+        document.getElementById("winScreen").style.display = "none";
+        initializeGame();
+      }
+
+      // ===== UI UPDATES =====
+      function updatePlayerIndicators() {
+        document
+          .getElementById("player1")
+          .classList.toggle("active", gameState.currentPlayer === 1);
+        document
+          .getElementById("player2")
+          .classList.toggle("active", gameState.currentPlayer === 2);
+      }
+
+      function updateStats() {
+        document.getElementById("p1Moves").textContent =
+          gameState.moveHistory.filter((m) => m.player === 1).length;
+        document.getElementById("p2Moves").textContent =
+          gameState.moveHistory.filter((m) => m.player === 2).length;
+
+        const gameTime = (Date.now() - gameState.gameStartTime) / 1000;
+        document.getElementById("p1Time").textContent = formatTime(gameTime);
+        document.getElementById("p2Time").textContent = formatTime(gameTime);
+      }
+
+      function updateGameStatus(message) {
+        document.getElementById("gameStatus").textContent = message;
+      }
+
+      function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+      }
+
+      // ===== GAME CONTROLS =====
+      function switchLayer(layer) {
+        gameState.currentLayer = layer;
+        renderBoard();
+        updateGameStatus(`Viewing Layer ${layer + 1}`);
+      }
+
+      function toggleView() {
+        gameState.is3DView = !gameState.is3DView;
+        const btn = document.getElementById("viewToggle");
+        btn.textContent = gameState.is3DView ? "2D View" : "3D View";
+        // In a real implementation, this would switch between 2D and 3D rendering
+        updateGameStatus(
+          gameState.is3DView ? "3D View Enabled" : "2D View Enabled",
+        );
+      }
+
+      function newGame() {
+        initializeGame();
+      }
+
+      function undoMove() {
+        if (
+          gameState.moveHistory.length === 0 ||
+          !gameState.gameActive ||
+          gameState.aiThinking
+        )
+          return;
+
+        const lastMove = gameState.moveHistory.pop();
+        gameState.board[lastMove.layer][lastMove.row][lastMove.column] = null;
+        gameState.currentPlayer = lastMove.player;
+        gameState.moveCount--;
+
+        updatePlayerIndicators();
+        updateStats();
+        renderBoard();
+        updateGameStatus(`Undo - Player ${gameState.currentPlayer}'s Turn`);
+        playSound(300, "sine");
+      }
+
+      function toggleSound() {
+        gameState.soundEnabled = !gameState.soundEnabled;
+        const btn = document.getElementById("soundBtn");
+        btn.innerHTML = gameState.soundEnabled
+          ? "<span>🔊</span> Sound On"
+          : "<span>🔇</span> Sound Off";
+      }
+
+      function toggleHint() {
+        if (!gameState.gameActive || gameState.aiThinking) return;
+
+        gameState.hintsEnabled = !gameState.hintsEnabled;
+        const btn = document.getElementById("hintBtn");
+        btn.innerHTML = gameState.hintsEnabled
+          ? "<span>💡</span> Hint On"
+          : "<span>💡</span> Hint Off";
+
+        if (gameState.hintsEnabled) {
+          showHint();
+        }
+      }
+
+      function showHint() {
+        // Find a good move for the current player
+        const validMoves = getAllValidMoves();
+        if (validMoves.length === 0) return;
+
+        // Highlight a suggested move
+        const suggestedMove =
+          validMoves[Math.floor(Math.random() * validMoves.length)];
+        updateGameStatus(
+          `Try column ${suggestedMove.column + 1} on layer ${suggestedMove.layer + 1}`,
+        );
+
+        // Visual highlight
+        document
+          .querySelectorAll(".column-indicator")
+          .forEach((indicator, col) => {
+            if (col === suggestedMove.column) {
+              indicator.style.background = "rgba(245, 158, 11, 0.3)";
+              indicator.style.boxShadow = "0 0 10px #f59e0b";
+            }
+          });
+
+        setTimeout(() => {
+          document
+            .querySelectorAll(".column-indicator")
+            .forEach((indicator) => {
+              indicator.style.background = "";
+              indicator.style.boxShadow = "";
+            });
+        }, 2000);
+      }
+
+      // ===== RACE MODE TIMER =====
+      let raceTimer = null;
+      function startRaceTimer() {
+        if (gameState.mode !== "race") return;
+
+        clearInterval(raceTimer);
+        let timeLeft = 30;
+
+        raceTimer = setInterval(() => {
+          timeLeft--;
+          updateGameStatus(
+            `Player ${gameState.currentPlayer}'s Turn - ${timeLeft}s left`,
+          );
+
+          if (timeLeft <= 0) {
+            clearInterval(raceTimer);
+            // Time's up - other player wins
+            const winner = gameState.currentPlayer === 1 ? 2 : 1;
+            gameState.gameActive = false;
+            gameState.scores[winner === 1 ? "p1" : "p2"]++;
+            updateGameStatus(`Time's up! Player ${winner} wins!`);
+            setTimeout(() => {
+              if (winner === 1) {
+                document.getElementById("winnerIcon").className =
+                  "winner-icon p1";
+                document.getElementById("winnerIcon").textContent = "X";
+                document.getElementById("winTitle").textContent =
+                  "TIME VICTORY!";
+              } else {
+                document.getElementById("winnerIcon").className =
+                  "winner-icon p2";
+                document.getElementById("winnerIcon").textContent = "O";
+                document.getElementById("winTitle").textContent =
+                  "TIME VICTORY!";
+              }
+              showWinScreen({ player: winner, cells: [] });
+            }, 1000);
+          }
+        }, 1000);
+      }
+
+      function getTimeLeft() {
+        // Placeholder - would calculate based on last move time
+        return 30;
+      }
+
+      // ===== AUDIO =====
+      function playSound(frequency, type, duration = 0.1) {
+        if (!gameState.soundEnabled) return;
+
+        try {
+          const audioContext = new (
+            window.AudioContext || window.webkitAudioContext
+          )();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+
+          oscillator.type = type;
+          oscillator.frequency.setValueAtTime(
+            frequency,
+            audioContext.currentTime,
+          );
+
+          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + duration,
+          );
+
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + duration);
+        } catch (e) {
+          // Audio not supported
+        }
+      }
+
+      // ===== INITIALIZATION =====
+      document.addEventListener("DOMContentLoaded", () => {
+        // Set default mode
+        selectMode("single");
+        selectDifficulty("strategist");
+
+        // Initialize with instructions
+        updateGameStatus("Select a game mode to begin");
+      });
+    </script>
+  </body>
+</html>

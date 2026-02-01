@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#000000" />
+    <title>TITAN LOGIC</title>
+    <style>
+      /* --- TITAN OS DESIGN SYSTEM (Optimized) --- */
+      :root {
+        --bg-dark: #000000;
+        --bg-panel: #111116;
+        --accent-blue: #3b82f6;
+        --accent-glow: rgba(59, 130, 246, 0.4);
+        --signal-on: #eab308; /* Yellow/Gold for ON */
+        --signal-off: #334155; /* Dark Grey for OFF */
+        --text-main: #ffffff;
+        --text-muted: #94a3b8;
+        --radius: 16px;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: none; /* Prevents scrolling while interacting */
+        user-select: none;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg-dark);
+        color: var(--text-main);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* HEADER */
+      .app-header {
+        height: 60px;
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(20, 20, 25, 0.95);
+        border-bottom: 1px solid #222;
+        z-index: 10;
+      }
+
+      .back-btn {
+        color: var(--text-main);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0.8;
+      }
+
+      .level-indicator {
+        font-family: monospace;
+        color: var(--accent-blue);
+        font-weight: 700;
+        letter-spacing: 1px;
+        border: 1px solid #333;
+        padding: 4px 10px;
+        border-radius: 8px;
+      }
+
+      /* GAME AREA */
+      #game-stage {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+        background: radial-gradient(
+          circle at 50% 50%,
+          #1a1b26 0%,
+          #000000 100%
+        );
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* TOOLBAR (Gates) */
+      .toolbar {
+        height: 100px;
+        background: var(--bg-panel);
+        border-top: 1px solid #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        padding-bottom: env(safe-area-inset-bottom);
+        z-index: 20;
+      }
+
+      .gate-tool {
+        width: 60px;
+        height: 60px;
+        background: #222;
+        border: 1px solid #444;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: #888;
+        cursor: pointer;
+        transition: transform 0.1s;
+      }
+      .gate-tool:active {
+        transform: scale(0.95);
+        border-color: var(--accent-blue);
+        color: white;
+      }
+
+      .gate-icon {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 4px;
+        fill: currentColor;
+      }
+
+      /* NOTIFICATION */
+      .toast {
+        position: absolute;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        background: #10b981;
+        color: black;
+        padding: 10px 24px;
+        border-radius: 20px;
+        font-weight: 800;
+        opacity: 0;
+        transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        pointer-events: none;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* TUTORIAL OVERLAY */
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        text-align: center;
+        padding: 30px;
+      }
+      .overlay h1 {
+        margin: 0 0 10px;
+        color: var(--accent-blue);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+      .overlay p {
+        color: #ccc;
+        line-height: 1.5;
+        max-width: 400px;
+        margin-bottom: 30px;
+      }
+      .btn {
+        background: var(--accent-blue);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 16px;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="index.html" class="back-btn">
+        <svg
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3"
+          viewBox="0 0 24 24"
+        >
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        OS
+      </a>
+      <div class="level-indicator" id="lvl-disp">LEVEL 1</div>
+      <div style="width: 40px"></div>
+    </header>
+
+    <div id="game-stage">
+      <div class="toast" id="toast">CIRCUIT STABLE</div>
+      <canvas id="canvas"></canvas>
+
+      <div class="overlay" id="start-screen">
+        <h1>Silicon Logic</h1>
+        <p>
+          Engineer the future.<br /><br />Connect inputs to outputs using logic
+          gates to match the required signal.
+        </p>
+        <button class="btn" onclick="game.start()">Initialize</button>
+      </div>
+
+      <div class="overlay" id="win-screen" style="display: none">
+        <h1 style="color: #10b981">System Online</h1>
+        <p>Logic valid. Efficiency 100%.</p>
+        <button class="btn" onclick="game.nextLevel()">Next Node</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="gate-tool" onpointerdown="game.setTool('AND')">
+        <svg class="gate-icon" viewBox="0 0 24 24">
+          <path d="M3 5v14h7c4.4 0 8-3.6 8-8s-3.6-8-8-8H3zm13 8h4" />
+        </svg>
+        AND
+      </div>
+      <div class="gate-tool" onpointerdown="game.setTool('OR')">
+        <svg class="gate-icon" viewBox="0 0 24 24">
+          <path
+            d="M3 4v16c2-3 2-13 0-16zm0 16h3c5 0 9-3 12-8s-7-8-12-8H3c2 3 2 13 0 16zm15-8h4"
+          />
+        </svg>
+        OR
+      </div>
+      <div class="gate-tool" onpointerdown="game.setTool('NOT')">
+        <svg class="gate-icon" viewBox="0 0 24 24">
+          <path d="M4 6l10 6-10 6V6zm11 6a2 2 0 1 0 4 0 2 2 0 1 0-4 0z" />
+        </svg>
+        NOT
+      </div>
+      <div
+        class="gate-tool"
+        style="border-color: #ef4444; color: #ef4444"
+        onpointerdown="game.deleteObject()"
+      >
+        <svg class="gate-icon" viewBox="0 0 24 24">
+          <path
+            d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+          />
+        </svg>
+        DEL
+      </div>
+      <div
+        class="gate-tool"
+        style="border-color: #eab308; color: #eab308"
+        onpointerdown="game.testCircuit()"
+      >
+        <svg class="gate-icon" viewBox="0 0 24 24">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+        RUN
+      </div>
+    </div>
+
+    <script>
+      /* --- ENGINE CORE --- */
+      const LOGIC = {
+        AND: (a, b) => a && b,
+        OR: (a, b) => a || b,
+        NOT: (a) => !a,
+        NAND: (a, b) => !(a && b),
+        XOR: (a, b) => (a || b) && !(a && b),
+      };
+
+      class Gate {
+        constructor(type, x, y) {
+          this.type = type;
+          this.x = x;
+          this.y = y;
+          this.w = 60;
+          this.h = 40;
+          this.inputs = type === "NOT" ? [0] : [0, 0];
+          this.output = 0;
+          this.connections = { in: [], out: [] }; // IDs of connected wires
+        }
+
+        compute(valA, valB) {
+          if (this.type === "AND") this.output = LOGIC.AND(valA, valB);
+          if (this.type === "OR") this.output = LOGIC.OR(valA, valB);
+          if (this.type === "NOT") this.output = LOGIC.NOT(valA);
+          return this.output;
+        }
+      }
+
+      class Wire {
+        constructor(startObj, endObj, startPin, endPin) {
+          this.start = startObj; // {type: 'input'|'gate', id: index, pin: 0}
+          this.end = endObj; // {type: 'output'|'gate', id: index, pin: 0/1}
+          this.state = 0;
+        }
+      }
+
+      class Game {
+        constructor() {
+          this.canvas = document.getElementById("canvas");
+          this.ctx = this.canvas.getContext("2d");
+          this.width = 0;
+          this.height = 0;
+          this.dpr = 1; // Low-end optimization
+
+          this.level = 0;
+          this.gates = [];
+          this.wires = [];
+          this.inputs = []; // {x, y, label, state}
+          this.outputs = []; // {x, y, label, req}
+
+          this.selectedTool = null;
+          this.draggedGate = null;
+          this.wireStart = null; // {obj, pin, type}
+
+          this.levels = [
+            {
+              // Level 1: Inverter
+              desc: "Invert the signal. Input ON needs to be OFF.",
+              inputs: [{ label: "A", state: 1 }],
+              outputs: [{ label: "Q", req: 0 }],
+              allowed: ["NOT"],
+            },
+            {
+              // Level 2: AND
+              desc: "High security. Both keys must be turned.",
+              inputs: [
+                { label: "A", state: 1 },
+                { label: "B", state: 1 },
+              ],
+              outputs: [{ label: "Q", req: 1 }],
+              allowed: ["AND"],
+            },
+            {
+              // Level 3: OR
+              desc: "Emergency override. Either switch triggers alarm.",
+              inputs: [
+                { label: "A", state: 0 },
+                { label: "B", state: 1 },
+              ],
+              outputs: [{ label: "Q", req: 1 }],
+              allowed: ["OR"],
+            },
+            {
+              // Level 4: Combo
+              desc: "Complex logic required.",
+              inputs: [
+                { label: "A", state: 1 },
+                { label: "B", state: 0 },
+              ],
+              outputs: [{ label: "Q", req: 0 }], // A=1, B=0. Need 0. AND(NOT(A), B)? No.
+              // Let's make it: NOT A -> 0. AND(0, 0) -> 0.
+              // Or simple: A=1, B=0 -> AND -> 0.
+              allowed: ["AND", "NOT"],
+            },
+            {
+              // Level 5: XOR Manual
+              desc: "Construct an Exclusive OR from basics.",
+              inputs: [
+                { label: "A", state: 1 },
+                { label: "B", state: 0 },
+              ],
+              outputs: [{ label: "Q", req: 1 }],
+              allowed: ["AND", "OR", "NOT"],
+            },
+          ];
+
+          this.resize();
+          window.addEventListener("resize", () => this.resize());
+          this.setupInput();
+          this.loop = this.loop.bind(this);
+          requestAnimationFrame(this.loop);
+        }
+
+        resize() {
+          this.width = this.canvas.parentElement.offsetWidth;
+          this.height = this.canvas.parentElement.offsetHeight;
+          this.canvas.width = this.width * this.dpr;
+          this.canvas.height = this.height * this.dpr;
+          this.ctx.scale(this.dpr, this.dpr);
+          this.loadLevel(this.level, false); // Reload positions
+        }
+
+        start() {
+          document.getElementById("start-screen").style.display = "none";
+          this.loadLevel(0);
+        }
+
+        nextLevel() {
+          document.getElementById("win-screen").style.display = "none";
+          this.level++;
+          if (this.level >= this.levels.length) this.level = 0; // Loop or end
+          this.loadLevel(this.level);
+        }
+
+        loadLevel(idx, reset = true) {
+          if (reset) {
+            this.gates = [];
+            this.wires = [];
+          }
+          const data = this.levels[idx];
+
+          document.getElementById("lvl-disp").innerText = `LEVEL ${idx + 1}`;
+
+          // Position Inputs (Left side)
+          const spacing = this.height / (data.inputs.length + 1);
+          this.inputs = data.inputs.map((inf, i) => ({
+            x: 50,
+            y: spacing * (i + 1),
+            label: inf.label,
+            state: inf.state,
+            id: i,
+          }));
+
+          // Position Outputs (Right side)
+          const outSpacing = this.height / (data.outputs.length + 1);
+          this.outputs = data.outputs.map((inf, i) => ({
+            x: this.width - 50,
+            y: outSpacing * (i + 1),
+            label: inf.label,
+            req: inf.req,
+            current: 0,
+            id: i,
+          }));
+        }
+
+        setTool(type) {
+          this.selectedTool = type;
+          this.wireStart = null;
+          // Visual feedback
+          document
+            .querySelectorAll(".gate-tool")
+            .forEach((el) => (el.style.borderColor = "#444"));
+        }
+
+        deleteObject() {
+          this.selectedTool = "DEL";
+        }
+
+        /* --- INPUT HANDLING --- */
+        setupInput() {
+          const down = (e) => {
+            const x = e.offsetX || e.touches[0].clientX;
+            const y = e.offsetY || e.touches[0].clientY - 60; // Header offset
+
+            // 1. DELETE MODE
+            if (this.selectedTool === "DEL") {
+              // Find clicked gate
+              const gIdx = this.gates.findIndex(
+                (g) => Math.abs(g.x - x) < 30 && Math.abs(g.y - y) < 20,
+              );
+              if (gIdx > -1) {
+                // Remove wires connected to this gate
+                this.wires = this.wires.filter(
+                  (w) =>
+                    !(w.start.type === "gate" && w.start.id === gIdx) &&
+                    !(w.end.type === "gate" && w.end.id === gIdx),
+                );
+                // Fix Gate IDs in wires (complex, simpler to just rebuild or use UIDs.
+                // For simple game: just remove gate and break wires)
+                this.gates.splice(gIdx, 1);
+                this.wires = []; // Harsh but stable for MVP
+                return;
+              }
+              // Remove wires? (Hitbox hard on lines)
+              this.selectedTool = null;
+              return;
+            }
+
+            // 2. WIRING (Hit detection on pins)
+            // Check Input Nodes
+            for (let i = 0; i < this.inputs.length; i++) {
+              if (Math.hypot(this.inputs[i].x - x, this.inputs[i].y - y) < 20) {
+                this.wireStart = {
+                  type: "input",
+                  id: i,
+                  pin: 0,
+                  x: this.inputs[i].x,
+                  y: this.inputs[i].y,
+                };
+                return;
+              }
+            }
+            // Check Gate Outputs
+            for (let i = 0; i < this.gates.length; i++) {
+              if (
+                Math.hypot(this.gates[i].x + 30 - x, this.gates[i].y - y) < 15
+              ) {
+                this.wireStart = {
+                  type: "gate",
+                  id: i,
+                  pin: 0,
+                  x: this.gates[i].x + 30,
+                  y: this.gates[i].y,
+                };
+                return;
+              }
+            }
+
+            // 3. PLACING GATES
+            if (this.selectedTool && this.selectedTool !== "DEL") {
+              this.gates.push(new Gate(this.selectedTool, x, y));
+              this.selectedTool = null;
+              return;
+            }
+
+            // 4. DRAGGING GATES
+            const gIdx = this.gates.findIndex(
+              (g) => Math.abs(g.x - x) < 30 && Math.abs(g.y - y) < 20,
+            );
+            if (gIdx > -1) {
+              this.draggedGate = this.gates[gIdx];
+            }
+          };
+
+          const move = (e) => {
+            const x = e.offsetX || e.touches[0].clientX;
+            const y = e.offsetY || e.touches[0].clientY - 60;
+
+            if (this.draggedGate) {
+              this.draggedGate.x = x;
+              this.draggedGate.y = y;
+            }
+          };
+
+          const up = (e) => {
+            // Finish Wire
+            if (this.wireStart) {
+              let x = e.offsetX;
+              let y = e.offsetY;
+              if (!x && e.changedTouches) {
+                x = e.changedTouches[0].clientX;
+                y = e.changedTouches[0].clientY - 60;
+              }
+
+              // Check Outputs nodes
+              for (let i = 0; i < this.outputs.length; i++) {
+                if (
+                  Math.hypot(this.outputs[i].x - x, this.outputs[i].y - y) < 20
+                ) {
+                  this.wires.push(
+                    new Wire(
+                      this.wireStart,
+                      { type: "output", id: i, pin: 0 },
+                      0,
+                      0,
+                    ),
+                  );
+                }
+              }
+              // Check Gate Inputs
+              for (let i = 0; i < this.gates.length; i++) {
+                const g = this.gates[i];
+                // Input 1 (Top or Middle)
+                let inY = g.type === "NOT" ? g.y : g.y - 10;
+                if (Math.hypot(g.x - 30 - x, inY - y) < 15) {
+                  this.wires.push(
+                    new Wire(this.wireStart, { type: "gate", id: i }, 0, 0),
+                  );
+                }
+                // Input 2 (Bottom)
+                if (g.type !== "NOT") {
+                  if (Math.hypot(g.x - 30 - x, g.y + 10 - y) < 15) {
+                    this.wires.push(
+                      new Wire(this.wireStart, { type: "gate", id: i }, 0, 1),
+                    );
+                  }
+                }
+              }
+              this.wireStart = null;
+            }
+            this.draggedGate = null;
+          };
+
+          this.canvas.addEventListener("mousedown", down);
+          this.canvas.addEventListener("mousemove", move);
+          this.canvas.addEventListener("mouseup", up);
+          this.canvas.addEventListener("touchstart", down, { passive: false });
+          this.canvas.addEventListener("touchmove", move, { passive: false });
+          this.canvas.addEventListener("touchend", up);
+        }
+
+        /* --- LOGIC SIMULATION --- */
+        testCircuit() {
+          // Reset states
+          this.wires.forEach((w) => (w.state = 0));
+          this.gates.forEach((g) => (g.output = 0));
+          this.outputs.forEach((o) => (o.current = 0));
+
+          // Propagation loop (dirty simple method: multiple passes)
+          for (let pass = 0; pass < 10; pass++) {
+            this.wires.forEach((w) => {
+              // Get Source Value
+              let val = 0;
+              if (w.start.type === "input") val = this.inputs[w.start.id].state;
+              if (w.start.type === "gate") val = this.gates[w.start.id].output;
+              w.state = val;
+            });
+
+            this.gates.forEach((g, idx) => {
+              // Find input wires
+              let in1 = 0,
+                in2 = 0;
+              const wiresIn = this.wires.filter(
+                (w) => w.end.type === "gate" && w.end.id === idx,
+              );
+
+              wiresIn.forEach((w) => {
+                if (w.end.pin === 0) in1 = w.state;
+                if (w.end.pin === 1) in2 = w.state;
+              });
+
+              // Special case for simple wire matching (if using ID map logic)
+              // Here we manually check pins.
+
+              g.compute(in1, in2);
+            });
+
+            this.wires.forEach((w) => {
+              if (w.end.type === "output") {
+                let val = 0;
+                if (w.start.type === "input")
+                  val = this.inputs[w.start.id].state;
+                if (w.start.type === "gate")
+                  val = this.gates[w.start.id].output;
+                this.outputs[w.end.id].current = val;
+              }
+            });
+          }
+
+          // Check Win
+          const allCorrect = this.outputs.every((o) => o.current === o.req);
+
+          const t = document.getElementById("toast");
+          if (allCorrect) {
+            t.className = "toast show";
+            t.style.background = "#10b981";
+            t.innerText = "SIGNAL STABLE - SUCCESS";
+            setTimeout(
+              () =>
+                (document.getElementById("win-screen").style.display = "flex"),
+              1000,
+            );
+          } else {
+            t.className = "toast show";
+            t.style.background = "#ef4444";
+            t.innerText = "SIGNAL MISMATCH";
+            setTimeout(() => (t.className = "toast"), 2000);
+          }
+        }
+
+        /* --- RENDER --- */
+        loop() {
+          this.ctx.fillStyle = "#111116";
+          this.ctx.fillRect(0, 0, this.width, this.height);
+          this.drawGrid();
+
+          // Draw Wires
+          this.ctx.lineWidth = 3;
+          this.wires.forEach((w) => {
+            this.ctx.strokeStyle = w.state ? "#eab308" : "#334155";
+            // Coords
+            let sx, sy, ex, ey;
+
+            if (w.start.type === "input") {
+              sx = this.inputs[w.start.id].x;
+              sy = this.inputs[w.start.id].y;
+            } else {
+              sx = this.gates[w.start.id].x + 30;
+              sy = this.gates[w.start.id].y;
+            }
+
+            if (w.end.type === "output") {
+              ex = this.outputs[w.end.id].x;
+              ey = this.outputs[w.end.id].y;
+            } else {
+              const g = this.gates[w.end.id];
+              ex = g.x - 30;
+              ey =
+                w.end.pin === 0
+                  ? g.type === "NOT"
+                    ? g.y
+                    : g.y - 10
+                  : g.y + 10;
+            }
+
+            // Bezier
+            this.ctx.beginPath();
+            this.ctx.moveTo(sx, sy);
+            this.ctx.bezierCurveTo(sx + 50, sy, ex - 50, ey, ex, ey);
+            this.ctx.stroke();
+          });
+
+          // Draw Drag Wire
+          if (this.wireStart) {
+            this.ctx.strokeStyle = "#fff";
+            this.ctx.setLineDash([5, 5]);
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.wireStart.x, this.wireStart.y);
+            // Follow mouse (approximate, since we don't track mouse in loop)
+            // Omitted for simplicity or need global mouse tracking.
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
+          }
+
+          // Draw Gates
+          this.gates.forEach((g) => {
+            this.ctx.fillStyle = "#222";
+            this.ctx.strokeStyle = g.output ? "#eab308" : "#555";
+            this.ctx.lineWidth = 2;
+
+            // Body
+            this.ctx.beginPath();
+            this.ctx.rect(g.x - 30, g.y - 20, 60, 40);
+            this.ctx.fill();
+            this.ctx.stroke();
+
+            // Text
+            this.ctx.fillStyle = "#fff";
+            this.ctx.font = "bold 12px sans-serif";
+            this.ctx.textAlign = "center";
+            this.ctx.textBaseline = "middle";
+            this.ctx.fillText(g.type, g.x, g.y);
+
+            // Pins
+            this.ctx.fillStyle = "#888";
+            // Output pin
+            this.ctx.beginPath();
+            this.ctx.arc(g.x + 30, g.y, 4, 0, Math.PI * 2);
+            this.ctx.fill();
+            // Input pins
+            if (g.type === "NOT") {
+              this.ctx.beginPath();
+              this.ctx.arc(g.x - 30, g.y, 4, 0, Math.PI * 2);
+              this.ctx.fill();
+            } else {
+              this.ctx.beginPath();
+              this.ctx.arc(g.x - 30, g.y - 10, 4, 0, Math.PI * 2);
+              this.ctx.fill();
+              this.ctx.beginPath();
+              this.ctx.arc(g.x - 30, g.y + 10, 4, 0, Math.PI * 2);
+              this.ctx.fill();
+            }
+          });
+
+          // Draw Inputs
+          this.inputs.forEach((i) => {
+            this.ctx.fillStyle = i.state ? "#eab308" : "#334155";
+            this.ctx.beginPath();
+            this.ctx.arc(i.x, i.y, 10, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.fillStyle = "#fff";
+            this.ctx.fillText(
+              i.label + (i.state ? " (1)" : " (0)"),
+              i.x - 20,
+              i.y - 20,
+            );
+          });
+
+          // Draw Outputs
+          this.outputs.forEach((o) => {
+            this.ctx.strokeStyle = "#fff";
+            this.ctx.fillStyle = o.current ? "#eab308" : "#000";
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.arc(o.x, o.y, 12, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.stroke();
+            this.ctx.fillStyle = "#fff";
+            this.ctx.fillText(`${o.label} (Req: ${o.req})`, o.x, o.y - 25);
+          });
+
+          requestAnimationFrame(this.loop);
+        }
+
+        drawGrid() {
+          this.ctx.strokeStyle = "rgba(255,255,255,0.05)";
+          this.ctx.lineWidth = 1;
+          const step = 40;
+          for (let x = 0; x < this.width; x += step) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, this.height);
+            this.ctx.stroke();
+          }
+          for (let y = 0; y < this.height; y += step) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(this.width, y);
+            this.ctx.stroke();
+          }
+        }
+      }
+
+      const game = new Game();
+    </script>
+  </body>
+</html>
+}

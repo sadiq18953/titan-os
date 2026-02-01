@@ -1,0 +1,1142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="description" content="Titan OS - Premium Game Launcher" />
+    <link rel="manifest" href="manifest.json" />
+    <title>TITAN OS OMEGA</title>
+
+    <style>
+      /* ========================================
+         MOBILE-OPTIMIZED DESIGN TOKENS
+         ======================================== */
+      :root {
+        /* --- Color Palette (Optimized for AMOLED) --- */
+        --bg-void: #000000;
+        --bg-deep: #0a0a0a;
+        --bg-surface: #0f0f0f;
+
+        /* --- PERFORMANCE FIRST GLASS SYSTEM --- */
+        --glass-low: rgba(25, 25, 30, 0.98);
+        --glass-mid: rgba(35, 35, 40, 0.98);
+        --glass-high: rgba(45, 45, 50, 0.98);
+        --glass-border: rgba(255, 255, 255, 0.12);
+        --glass-shine: rgba(255, 255, 255, 0.08);
+
+        /* --- Brand Colors --- */
+        --accent-blue: #3b82f6;
+        --accent-cyan: #06b6d4;
+        --accent-purple: #8b5cf6;
+        --accent-red: #ef4444;
+        --accent-gold: #eab308;
+        --accent-green: #10b981;
+
+        /* --- Typography (Mobile Optimized) --- */
+        --font-main:
+          system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        --text-primary: #ffffff;
+        --text-secondary: #a0a0b0;
+        --text-tertiary: #606070;
+
+        /* --- Mobile Spacing --- */
+        --safe-top: env(safe-area-inset-top, 12px);
+        --safe-bottom: env(safe-area-inset-bottom, 12px);
+        --dock-height: 70px;
+        --header-height: 50px;
+        --touch-min: 44px; /* Apple HIG minimum touch target */
+
+        /* --- Animation (Optimized for mobile) --- */
+        --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+        --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* ========================================
+         PERFORMANCE-FOCUSED RESET
+         ======================================== */
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        touch-action: manipulation;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg-void);
+        color: var(--text-primary);
+        font-family: var(--font-main);
+        overscroll-behavior: none;
+        position: fixed;
+        /* Prevent text selection */
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      /* ========================================
+         MINIMAL BACKGROUND (1GB RAM FRIENDLY)
+         ======================================== */
+      #bg-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+        background: var(--bg-void);
+      }
+
+      /* ========================================
+         MOBILE STATUS BAR
+         ======================================== */
+      .status-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: calc(var(--header-height) + var(--safe-top));
+        padding: var(--safe-top) 16px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        font-size: 13px;
+        font-weight: 600;
+        background: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.95) 0%,
+          transparent 100%
+        );
+        pointer-events: none;
+      }
+
+      .status-left,
+      .status-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        pointer-events: auto;
+      }
+
+      .status-icon {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+      }
+
+      /* ========================================
+         MOBILE-FIRST SCROLL CONTAINER
+         ======================================== */
+      .os-viewport {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: calc(var(--header-height) + var(--safe-top) + 10px) 16px
+          calc(var(--dock-height) + var(--safe-bottom) + 10px);
+        z-index: 10;
+        scrollbar-width: none;
+      }
+
+      .os-viewport::-webkit-scrollbar {
+        display: none;
+      }
+
+      .content-wrapper {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      /* ========================================
+         MOBILE HERO WIDGET
+         ======================================== */
+      .hero-widget {
+        background: var(--glass-mid);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+        animation: slideDown 0.6s var(--ease-out);
+        transform: translateZ(0); /* GPU acceleration */
+        will-change: transform;
+      }
+
+      .sys-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--accent-cyan);
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .sys-title {
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(to right, #fff, #a0a0b0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1.2;
+      }
+
+      .sys-status {
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+      }
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--accent-green);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+
+      /* ========================================
+         TOUCH-FRIENDLY METRICS
+         ======================================== */
+      .metrics-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .metric-card {
+        background: var(--glass-mid);
+        border: 1px solid var(--glass-border);
+        border-radius: 18px;
+        padding: 14px 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        cursor: pointer;
+        min-height: var(--touch-min);
+        transition:
+          transform 0.15s,
+          background 0.15s;
+        transform: translateZ(0);
+      }
+
+      .metric-card:active {
+        transform: scale(0.96);
+        background: var(--glass-high);
+      }
+
+      .metric-val {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .metric-label {
+        font-size: 10px;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+
+      /* ========================================
+         MOBILE SEARCH BAR
+         ======================================== */
+      .search-container {
+        position: relative;
+        width: 100%;
+        margin: 5px 0;
+      }
+
+      .search-input {
+        width: 100%;
+        height: var(--touch-min);
+        background: var(--glass-low);
+        border: 1px solid var(--glass-border);
+        border-radius: 18px;
+        padding: 0 20px 0 48px;
+        font-size: 15px;
+        color: white;
+        font-family: var(--font-main);
+        transition: all 0.2s;
+      }
+
+      .search-input:focus {
+        background: var(--glass-mid);
+        border-color: var(--accent-blue);
+        outline: none;
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 18px;
+        height: 18px;
+        fill: var(--text-secondary);
+        pointer-events: none;
+      }
+
+      /* ========================================
+         RESPONSIVE APP GRID
+         ======================================== */
+      .section-header {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 10px 0 5px 5px;
+      }
+
+      .app-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 16px;
+        justify-items: center;
+      }
+
+      .app-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        width: 100%;
+        max-width: 100px;
+        cursor: pointer;
+        transition: transform 0.2s var(--ease-out);
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .app-card:active {
+        transform: scale(0.92);
+      }
+
+      .icon-box {
+        width: 65px;
+        height: 65px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+        transform: translateZ(0);
+      }
+
+      .icon-box::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 50%;
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.15),
+          transparent
+        );
+        pointer-events: none;
+      }
+
+      .icon-box svg {
+        width: 30px;
+        height: 30px;
+        fill: white;
+        z-index: 2;
+      }
+
+      .app-name {
+        font-size: 12px;
+        color: var(--text-primary);
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.2;
+      }
+
+      /* App Color Themes */
+      .app-guess .icon-box {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+      }
+      .app-warfare .icon-box {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      }
+      .app-strike .icon-box {
+        background: linear-gradient(135deg, #ef4444, #b91c1c);
+      }
+      .app-logic .icon-box {
+        background: linear-gradient(135deg, #eab308, #b45309);
+      }
+      .app-toe .icon-box {
+        background: linear-gradient(135deg, #8b5cf6, #d946ef);
+      }
+      .app-particle .icon-box {
+        background: linear-gradient(135deg, #f59e0b, #ef4444);
+      }
+      .app-terminal .icon-box {
+        background: linear-gradient(135deg, #064e3b, #10b981);
+      }
+      .app-quantum .icon-box {
+        background: linear-gradient(135deg, #3730a3, #7c3aed);
+      }
+
+      /* ========================================
+         MOBILE DOCK (Bottom Navigation)
+         ======================================== */
+      .dock-container {
+        position: fixed;
+        bottom: var(--safe-bottom);
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        z-index: 100;
+        pointer-events: none;
+        padding: 0 16px;
+      }
+
+      .dock {
+        pointer-events: auto;
+        background: var(--glass-high);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        height: 60px;
+        padding: 0 24px;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        transform: translateY(100%);
+        animation: slideUp 0.6s var(--ease-out) 0.3s forwards;
+        width: 100%;
+        max-width: 320px;
+      }
+
+      .dock-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        cursor: pointer;
+        position: relative;
+        min-height: var(--touch-min);
+      }
+
+      .dock-btn svg {
+        width: 22px;
+        height: 22px;
+        fill: currentColor;
+      }
+
+      .dock-btn.active {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .dock-btn.active::after {
+        content: "";
+        position: absolute;
+        bottom: -6px;
+        width: 4px;
+        height: 4px;
+        background: var(--accent-blue);
+        border-radius: 50%;
+      }
+
+      .dock-btn:active {
+        transform: scale(0.9);
+      }
+
+      /* ========================================
+         MOBILE NOTIFICATIONS
+         ======================================== */
+      .toast {
+        position: fixed;
+        top: calc(var(--safe-top) + 50px);
+        left: 50%;
+        transform: translate(-50%, -20px);
+        background: var(--glass-high);
+        border: 1px solid var(--glass-border);
+        padding: 12px 20px;
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 200;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s var(--ease-out);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        max-width: 90%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .toast.visible {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      .toast-icon {
+        width: 18px;
+        height: 18px;
+        fill: var(--accent-blue);
+        flex-shrink: 0;
+      }
+
+      .toast-msg {
+        font-size: 13px;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* ========================================
+         OPTIMIZED LOADING SCREEN
+         ======================================== */
+      #loader {
+        position: fixed;
+        inset: 0;
+        background: var(--bg-deep);
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.4s ease;
+      }
+
+      .loader-spinner {
+        width: 40px;
+        height: 40px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-top-color: var(--accent-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 16px;
+      }
+
+      .loader-text {
+        font-size: 12px;
+        letter-spacing: 2px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        animation: pulse 2s infinite;
+      }
+
+      /* ========================================
+         MOBILE-OPTIMIZED ANIMATIONS
+         ======================================== */
+      @keyframes spin {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+      }
+
+      @keyframes slideDown {
+        from {
+          transform: translateY(-15px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(100%);
+        }
+        to {
+          transform: translateY(0);
+        }
+      }
+
+      /* ========================================
+         PERFORMANCE MEDIA QUERIES
+         ======================================== */
+      /* Small phones */
+      @media (max-width: 360px) {
+        .app-grid {
+          grid-template-columns: repeat(3, 1fr);
+          gap: 14px;
+        }
+
+        .icon-box {
+          width: 60px;
+          height: 60px;
+          border-radius: 18px;
+        }
+
+        .icon-box svg {
+          width: 26px;
+          height: 26px;
+        }
+
+        .dock {
+          height: 56px;
+          padding: 0 20px;
+          border-radius: 28px;
+        }
+
+        .dock-btn {
+          width: 36px;
+          height: 36px;
+        }
+
+        .hero-widget {
+          padding: 18px;
+        }
+
+        .sys-title {
+          font-size: 24px;
+        }
+      }
+
+      /* Tablets and larger phones */
+      @media (min-width: 768px) {
+        .content-wrapper {
+          max-width: 700px;
+        }
+
+        .app-grid {
+          grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+          gap: 20px;
+        }
+
+        .icon-box {
+          width: 75px;
+          height: 75px;
+        }
+
+        .dock {
+          max-width: 400px;
+        }
+      }
+
+      /* Landscape orientation */
+      @media (orientation: landscape) and (max-height: 500px) {
+        .status-bar {
+          height: calc(40px + var(--safe-top));
+        }
+
+        .os-viewport {
+          padding-top: calc(40px + var(--safe-top) + 10px);
+        }
+
+        .hero-widget {
+          padding: 16px;
+        }
+
+        .sys-title {
+          font-size: 22px;
+        }
+
+        .app-grid {
+          grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+          gap: 12px;
+        }
+
+        .icon-box {
+          width: 55px;
+          height: 55px;
+        }
+
+        .icon-box svg {
+          width: 24px;
+          height: 24px;
+        }
+      }
+
+      /* Reduced motion preference */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+
+        .loader-spinner {
+          animation: none;
+        }
+      }
+
+      /* Dark mode optimization */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --glass-low: rgba(20, 20, 25, 0.98);
+          --glass-mid: rgba(30, 30, 35, 0.98);
+          --glass-high: rgba(40, 40, 45, 0.98);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="bg-canvas"></canvas>
+
+    <div id="loader">
+      <div class="loader-spinner"></div>
+      <div class="loader-text">TITAN OS</div>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-left">
+        <span id="clock">12:00</span>
+      </div>
+      <div class="status-right">
+        <svg class="status-icon" viewBox="0 0 24 24">
+          <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+        </svg>
+        <svg class="status-icon" viewBox="0 0 24 24">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
+          />
+        </svg>
+        <span id="batt">--%</span>
+      </div>
+    </div>
+
+    <div class="os-viewport">
+      <div class="content-wrapper">
+        <div class="hero-widget">
+          <div class="hero-content">
+            <div class="sys-label">System Online</div>
+            <div class="sys-title">TITAN OS</div>
+            <div class="sys-status">
+              <div class="status-dot"></div>
+              <span>Omega Kernel v4.2 Running</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics-row">
+          <div class="metric-card" onclick="spawnToast('Memory Optimized')">
+            <div class="metric-val" id="ram">3.2G</div>
+            <div class="metric-label">RAM</div>
+          </div>
+          <div class="metric-card" onclick="spawnToast('Storage Checked')">
+            <div class="metric-val">64G</div>
+            <div class="metric-label">SSD</div>
+          </div>
+          <div
+            class="metric-card"
+            onclick="spawnToast('Performance Mode Active')"
+          >
+            <div class="metric-val" style="color: var(--accent-green)">60</div>
+            <div class="metric-label">FPS</div>
+          </div>
+        </div>
+
+        <div class="search-container">
+          <svg class="search-icon" viewBox="0 0 24 24">
+            <path
+              d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+            />
+          </svg>
+          <input
+            type="text"
+            id="appSearch"
+            class="search-input"
+            placeholder="Search applications..."
+            onkeyup="filterApps()"
+          />
+        </div>
+
+        <div class="section-header">Installed Applications</div>
+
+        <div class="app-grid" id="appGrid">
+          <!-- Apps will be loaded here dynamically for better performance -->
+        </div>
+      </div>
+    </div>
+
+    <div class="dock-container">
+      <div class="dock">
+        <div class="dock-btn active">
+          <svg viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+          </svg>
+        </div>
+        <div class="dock-btn" onclick="spawnToast('Search Active')">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+            />
+          </svg>
+        </div>
+        <div class="dock-btn" onclick="spawnToast('Settings Locked')">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.04.17 0 .34.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.04-.22 0-.45-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast">
+      <svg class="toast-icon" viewBox="0 0 24 24">
+        <path
+          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+        />
+      </svg>
+      <span id="toast-msg" class="toast-msg">Notification</span>
+    </div>
+
+    <script>
+      /* ========================================
+         ULTRA-LIGHT SYSTEM KERNEL (1GB RAM OPTIMIZED)
+         ======================================== */
+
+      // 1. MINIMAL BACKGROUND ENGINE
+      class ParticleEngine {
+        constructor() {
+          this.canvas = document.getElementById("bg-canvas");
+          this.ctx = this.canvas.getContext("2d");
+          this.particles = [];
+          this.frameId = null;
+          this.init();
+          this.animate();
+        }
+
+        init() {
+          this.resize();
+          window.addEventListener("resize", () => this.resize());
+
+          // Reduced particle count for 1GB RAM (8 instead of 15)
+          const particleCount = 8;
+          for (let i = 0; i < particleCount; i++) {
+            this.particles.push({
+              x: Math.random() * this.canvas.width,
+              y: Math.random() * this.canvas.height,
+              size: Math.random() * 1.5 + 0.5,
+              speed: Math.random() * 0.3 + 0.1,
+              angle: Math.random() * Math.PI * 2,
+            });
+          }
+        }
+
+        resize() {
+          this.canvas.width = window.innerWidth;
+          this.canvas.height = window.innerHeight;
+        }
+
+        animate() {
+          // Use requestAnimationFrame with time-based updates for consistent performance
+          this.frameId = requestAnimationFrame(() => this.animate());
+
+          // Clear with opacity for trail effect (cheaper than full clear)
+          this.ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+          // Update and draw particles
+          this.particles.forEach((p) => {
+            // Simple movement
+            p.x += Math.cos(p.angle) * p.speed;
+            p.y += Math.sin(p.angle) * p.speed;
+
+            // Bounce off edges
+            if (p.x < 0 || p.x > this.canvas.width) p.angle = Math.PI - p.angle;
+            if (p.y < 0 || p.y > this.canvas.height) p.angle = -p.angle;
+
+            // Draw particle
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+            this.ctx.fill();
+          });
+        }
+
+        // Clean up on page hide
+        stop() {
+          if (this.frameId) {
+            cancelAnimationFrame(this.frameId);
+          }
+        }
+      }
+
+      // 2. MOBILE SYSTEM UTILITIES
+      class System {
+        static init() {
+          // Remove loader quickly
+          setTimeout(() => {
+            const loader = document.getElementById("loader");
+            loader.style.opacity = "0";
+            setTimeout(() => loader.remove(), 400);
+          }, 800);
+
+          // Start system services
+          this.startClock();
+          this.initBattery();
+          this.initApps();
+          this.initRAMSimulator();
+
+          // Initialize service worker (if supported)
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js").catch(console.log);
+          }
+
+          // Handle visibility change to pause animations
+          document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+              // Page is hidden, could pause heavy animations here
+            }
+          });
+        }
+
+        static startClock() {
+          const update = () => {
+            const now = new Date();
+            document.getElementById("clock").textContent =
+              now.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+          };
+          update();
+          setInterval(update, 30000); // Update every 30 seconds to save CPU
+        }
+
+        static initBattery() {
+          if (navigator.getBattery) {
+            navigator.getBattery().then((battery) => {
+              const updateBattery = () => {
+                document.getElementById("batt").textContent =
+                  Math.floor(battery.level * 100) + "%";
+              };
+              updateBattery();
+              battery.addEventListener("levelchange", updateBattery);
+            });
+          }
+        }
+
+        static initApps() {
+          const apps = [
+            {
+              name: "Guess",
+              class: "app-guess",
+              href: "guess.html",
+              icon: "guess",
+            },
+            { name: "Toe", class: "app-toe", href: "toe.html", icon: "toe" },
+            {
+              name: "Warfare",
+              class: "app-warfare",
+              href: "warfare.html",
+              icon: "warfare",
+            },
+            {
+              name: "Strike",
+              class: "app-strike",
+              href: "football.html",
+              icon: "strike",
+            },
+            {
+              name: "Storm",
+              class: "app-particle",
+              href: "particle.html",
+              icon: "particle",
+            },
+            {
+              name: "Terminal",
+              class: "app-terminal",
+              href: "terminal.html",
+              icon: "terminal",
+            },
+            {
+              name: "Quantum",
+              class: "app-quantum",
+              href: "quantum.html",
+              icon: "quantum",
+            },
+            {
+              name: "Logic",
+              class: "app-logic",
+              href: "logic.html",
+              icon: "logic",
+            },
+          ];
+
+          const appGrid = document.getElementById("appGrid");
+
+          // Create app cards with minimal DOM manipulation
+          const fragment = document.createDocumentFragment();
+          apps.forEach((app) => {
+            const card = document.createElement("a");
+            card.className = `app-card ${app.class}`;
+            card.href = app.href;
+            card.innerHTML = `
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24">
+                  <path d="${this.getIconPath(app.icon)}"/>
+                </svg>
+              </div>
+              <div class="app-name">${app.name}</div>
+            `;
+            fragment.appendChild(card);
+          });
+
+          appGrid.appendChild(fragment);
+        }
+
+        static getIconPath(icon) {
+          // Simplified icon paths for performance
+          const icons = {
+            guess:
+              "M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z",
+            toe: "M3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2zm12 4c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-6 6c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2z",
+            warfare:
+              "M4 4h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 10h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 16h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4z",
+            strike:
+              "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z",
+            particle:
+              "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
+            terminal:
+              "M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z",
+            quantum:
+              "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM7.07 18.28c.43-.9 3.05-1.78 4.93-1.78s4.51.88 4.93 1.78C15.57 19.36 13.86 20 12 20s-3.57-.64-4.93-1.72zm11.29-1.45c-1.43-1.74-4.9-2.33-6.36-2.33s-4.93.59-6.36 2.33C4.62 15.49 4 13.82 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8c0 1.82-.62 3.49-1.64 4.83zM12 6c-1.94 0-3.5 1.56-3.5 3.5S10.06 13 12 13s3.5-1.56 3.5-3.5S13.94 6 12 6zm0 5c-.83 0-1.5-.67-1.5-1.5S11.17 8 12 8s1.5.67 1.5 1.5S12.83 11 12 11z",
+            logic:
+              "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z",
+          };
+          return icons[icon] || icons.guess;
+        }
+
+        static initRAMSimulator() {
+          // Simulate RAM usage (lightweight)
+          setInterval(() => {
+            const ram = (Math.random() * 0.4 + 2.8).toFixed(1);
+            document.getElementById("ram").textContent = ram + "G";
+          }, 5000); // Reduced frequency
+        }
+
+        static spawnToast(msg) {
+          const toast = document.getElementById("toast");
+          const msgEl = document.getElementById("toast-msg");
+
+          msgEl.textContent = msg;
+          toast.classList.add("visible");
+
+          clearTimeout(this.toastTimeout);
+          this.toastTimeout = setTimeout(() => {
+            toast.classList.remove("visible");
+          }, 2000);
+        }
+
+        static filterApps() {
+          const term = document
+            .getElementById("appSearch")
+            .value.toLowerCase()
+            .trim();
+          const cards = document.querySelectorAll(".app-card");
+
+          cards.forEach((card) => {
+            const name = card
+              .querySelector(".app-name")
+              .textContent.toLowerCase();
+            card.style.display =
+              term === "" || name.includes(term) ? "flex" : "none";
+          });
+        }
+      }
+
+      // 3. BOOTSTRAP WITH PERFORMANCE MONITORING
+      window.addEventListener("DOMContentLoaded", () => {
+        // Start with minimal setup
+        const engine = new ParticleEngine();
+
+        // Initialize system after a short delay to prevent UI freeze
+        setTimeout(() => System.init(), 100);
+
+        // Global accessors for inline events
+        window.spawnToast = System.spawnToast;
+        window.filterApps = System.filterApps;
+
+        // Handle page visibility to pause/resume animations
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden) {
+            engine.stop();
+          } else {
+            engine.animate();
+          }
+        });
+
+        // Prevent context menu on long press
+        document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+        // Handle orientation change
+        let orientationTimeout;
+        window.addEventListener("orientationchange", () => {
+          clearTimeout(orientationTimeout);
+          orientationTimeout = setTimeout(() => {
+            window.scrollTo(0, 0);
+          }, 300);
+        });
+
+        // Add touch feedback for all interactive elements
+        document.addEventListener("touchstart", () => {}, { passive: true });
+      });
+
+      // 4. LOAD PRIORITY: Critical CSS is already inlined, defer non-critical loading
+      window.addEventListener("load", () => {
+        // Mark as fully loaded
+        document.body.classList.add("loaded");
+
+        // Load any non-critical resources here
+        if ("connection" in navigator && navigator.connection.saveData) {
+          // Data saver mode - skip non-critical loads
+          console.log("Data saver mode: Skipping non-critical loads");
+        }
+      });
+    </script>
+  </body>
+</html>

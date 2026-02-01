@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#000000" />
+    <title>TITAN TERMINAL</title>
+    <style>
+      :root {
+        --bg: #000000;
+        --terminal-green: #0aff0a;
+        --terminal-glow: rgba(10, 255, 10, 0.5);
+        --alert-red: #ff0055;
+      }
+
+      @font-face {
+        font-family: "Hacker";
+        src: local("Courier New"), local("Consolas"), monospace;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        overflow: hidden;
+        font-family: "Hacker", monospace;
+        color: var(--terminal-green);
+        touch-action: none; /* Disable zoom/scroll */
+      }
+
+      /* CRT SCREEN EFFECT (Fast CSS version) */
+      .crt-overlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(
+          rgba(18, 16, 16, 0) 50%,
+          rgba(0, 0, 0, 0.25) 50%
+        );
+        background-size: 100% 4px;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      .scanline {
+        width: 100%;
+        height: 100px;
+        background: linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0) 0%,
+          rgba(10, 255, 10, 0.04) 50%,
+          rgba(0, 0, 0, 0) 100%
+        );
+        opacity: 0.1;
+        position: absolute;
+        bottom: 100%;
+        animation: scanline 10s linear infinite;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      @keyframes scanline {
+        0% {
+          bottom: 100%;
+        }
+        100% {
+          bottom: -100%;
+        }
+      }
+
+      /* UI HUD */
+      #ui-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 5;
+        padding: 20px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 2px solid var(--terminal-green);
+        padding-bottom: 10px;
+        background: rgba(0, 0, 0, 0.8);
+      }
+
+      .stat-box {
+        text-align: center;
+      }
+      .label {
+        font-size: 10px;
+        opacity: 0.7;
+      }
+      .value {
+        font-size: 24px;
+        font-weight: bold;
+        text-shadow: 0 0 5px var(--terminal-glow);
+      }
+
+      /* MOBILE KEYBOARD OVERLAY */
+      #mobile-keyboard {
+        display: none; /* Hidden on desktop, shown via JS on mobile */
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: rgba(0, 20, 0, 0.95);
+        border-top: 2px solid var(--terminal-green);
+        padding: 10px;
+        z-index: 20;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 4px;
+        pointer-events: auto;
+      }
+
+      .key {
+        background: rgba(0, 255, 0, 0.1);
+        border: 1px solid var(--terminal-green);
+        color: var(--terminal-green);
+        height: 40px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .key:active {
+        background: var(--terminal-green);
+        color: black;
+      }
+
+      /* START SCREEN */
+      #modal {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 30;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 40px;
+        margin: 0;
+        text-shadow: 0 0 10px var(--terminal-green);
+        letter-spacing: -2px;
+      }
+
+      p {
+        color: #888;
+        max-width: 300px;
+        line-height: 1.4;
+        margin-bottom: 30px;
+      }
+
+      .btn {
+        background: var(--terminal-green);
+        color: black;
+        border: none;
+        padding: 15px 40px;
+        font-family: "Hacker", monospace;
+        font-weight: 900;
+        font-size: 18px;
+        cursor: pointer;
+        text-transform: uppercase;
+        box-shadow: 0 0 15px var(--terminal-glow);
+      }
+      .btn:active {
+        transform: scale(0.95);
+      }
+
+      .back-btn {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: var(--terminal-green);
+        text-decoration: none;
+        border: 1px solid var(--terminal-green);
+        padding: 5px 10px;
+        font-size: 12px;
+        z-index: 40;
+        background: black;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-btn">&lt; EXIT SYSTEM</a>
+
+    <div class="crt-overlay"></div>
+    <div class="scanline"></div>
+
+    <canvas id="game"></canvas>
+
+    <div id="ui-layer">
+      <div class="header">
+        <div class="stat-box">
+          <div class="label">SCORE</div>
+          <div class="value" id="score">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">WAVE</div>
+          <div class="value" id="wave">1</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">INTEGRITY</div>
+          <div class="value" id="health" style="color: var(--terminal-green)">
+            100%
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mobile-keyboard"></div>
+
+    <div id="modal">
+      <h1>TERMINAL<br />DEFENSE</h1>
+      <p>
+        Security Breach Detected.<br />Type the falling encryption codes to
+        neutralize threats.
+      </p>
+      <button class="btn" onclick="startGame()">INITIATE</button>
+    </div>
+
+    <script>
+      /* --- CONFIG --- */
+      const WORDS = [
+        "ROOT",
+        "SUDO",
+        "HACK",
+        "CODE",
+        "JAVA",
+        "NODE",
+        "RUBY",
+        "PERL",
+        "BASH",
+        "SHELL",
+        "ECHO",
+        "GREP",
+        "FIND",
+        "KILL",
+        "EXIT",
+        "NANO",
+        "VIM",
+        "HOST",
+        "PING",
+        "CURL",
+        "WGET",
+        "SSH",
+        "FTP",
+        "MAIL",
+        "DATA",
+        "BIOS",
+        "CMOS",
+        "UEFI",
+        "BOOT",
+        "CORE",
+        "CPU",
+        "RAM",
+        "DISK",
+        "SSD",
+        "NVME",
+        "PCIE",
+        "USB",
+        "HDMI",
+        "WIFI",
+        "LAN",
+        "WAN",
+        "IPV4",
+        "IPV6",
+        "DNS",
+        "DHCP",
+        "TCP",
+        "UDP",
+        "HTTP",
+        "HTML",
+        "CSS",
+        "JSON",
+        "XML",
+        "SQL",
+        "VOID",
+        "NULL",
+        "TRUE",
+        "FALSE",
+      ];
+
+      /* --- ENGINE --- */
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      let w, h;
+      let activeWords = [];
+      let particles = [];
+      let score = 0;
+      let wave = 1;
+      let health = 100;
+      let gameLoop;
+      let spawnRate = 2000;
+      let lastSpawn = 0;
+      let isPlaying = false;
+
+      // Audio Context
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      const audioCtx = new AudioContext();
+
+      function playTone(freq, type = "square", dur = 0.1) {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(
+          0.01,
+          audioCtx.currentTime + dur,
+        );
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + dur);
+      }
+
+      function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      /* --- GAME LOGIC --- */
+      class Word {
+        constructor() {
+          this.text = WORDS[Math.floor(Math.random() * WORDS.length)];
+          this.x = Math.random() * (w - 100) + 50;
+          this.y = -30;
+          this.speed = (Math.random() * 0.5 + 0.5) * (1 + wave * 0.1);
+          this.matchedIndex = 0; // How many letters matched
+          this.color = "#0aff0a";
+        }
+
+        draw() {
+          ctx.font = "bold 24px Hacker";
+          // Draw matched part
+          ctx.fillStyle = "#555";
+          const matchedStr = this.text.substring(0, this.matchedIndex);
+          const remainStr = this.text.substring(this.matchedIndex);
+          const mWidth = ctx.measureText(matchedStr).width;
+
+          ctx.fillText(matchedStr, this.x, this.y);
+
+          // Draw remaining part
+          ctx.fillStyle = this.color;
+          ctx.fillText(remainStr, this.x + mWidth, this.y);
+
+          // Glitch effect
+          if (Math.random() > 0.95) {
+            ctx.fillStyle = "rgba(10, 255, 10, 0.5)";
+            ctx.fillText(
+              this.text,
+              this.x + Math.random() * 4 - 2,
+              this.y + Math.random() * 4 - 2,
+            );
+          }
+        }
+
+        update() {
+          this.y += this.speed;
+        }
+      }
+
+      class Particle {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.vx = (Math.random() - 0.5) * 5;
+          this.vy = (Math.random() - 0.5) * 5;
+          this.life = 1.0;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          this.life -= 0.05;
+        }
+        draw() {
+          ctx.fillStyle = `rgba(10, 255, 10, ${this.life})`;
+          ctx.fillRect(this.x, this.y, 2, 2);
+        }
+      }
+
+      function spawnWord() {
+        activeWords.push(new Word());
+      }
+
+      function checkInput(char) {
+        if (!isPlaying) return;
+
+        let hit = false;
+        // Find match
+        for (let word of activeWords) {
+          // If this word is already partially typed, check next char
+          // OR if no word is partially typed, check first char
+          if (word.text[word.matchedIndex] === char) {
+            word.matchedIndex++;
+            hit = true;
+            playTone(800 + word.matchedIndex * 100, "square", 0.05);
+
+            // Spawn particles
+            // Rough calc of particle pos
+            const widthSoFar =
+              word.matchedIndex * 14; /* Approx width per char */
+            for (let i = 0; i < 3; i++) {
+              particles.push(new Particle(word.x + widthSoFar, word.y - 10));
+            }
+
+            if (word.matchedIndex >= word.text.length) {
+              // Word Complete
+              destroyWord(word);
+            }
+            break; // Only hit one word per keystroke (prevents multi-hit)
+          }
+        }
+
+        if (!hit) {
+          playTone(150, "sawtooth", 0.1); // Error sound
+          // Shake screen effect could go here
+        }
+      }
+
+      function destroyWord(word) {
+        score += word.text.length * 10;
+        document.getElementById("score").innerText = score;
+        playTone(400, "square", 0.2); // Success sound
+
+        // Remove from array
+        activeWords = activeWords.filter((w) => w !== word);
+
+        // Explosion
+        for (let i = 0; i < 10; i++) {
+          particles.push(new Particle(word.x, word.y));
+        }
+
+        // Wave Logic
+        if (score > wave * 500) {
+          wave++;
+          document.getElementById("wave").innerText = wave;
+          spawnRate = Math.max(500, 2000 - wave * 100);
+        }
+      }
+
+      function gameOver() {
+        isPlaying = false;
+        document.getElementById("modal").style.display = "flex";
+        document.querySelector("h1").innerText = "SYSTEM FAILURE";
+        document.querySelector("p").innerText =
+          "Firewall breached.\nFinal Score: " + score;
+        document.querySelector(".btn").innerText = "REBOOT SYSTEM";
+      }
+
+      function startGame() {
+        activeWords = [];
+        particles = [];
+        score = 0;
+        wave = 1;
+        health = 100;
+        spawnRate = 2000;
+        isPlaying = true;
+        document.getElementById("score").innerText = "0";
+        document.getElementById("wave").innerText = "1";
+        document.getElementById("health").innerText = "100%";
+        document.getElementById("health").style.color = "#0aff0a";
+        document.getElementById("modal").style.display = "none";
+        lastSpawn = Date.now();
+        loop();
+      }
+
+      function loop() {
+        if (!isPlaying) return;
+        requestAnimationFrame(loop);
+
+        ctx.clearRect(0, 0, w, h);
+
+        const now = Date.now();
+        if (now - lastSpawn > spawnRate) {
+          spawnWord();
+          lastSpawn = now;
+        }
+
+        // Update Words
+        for (let i = activeWords.length - 1; i >= 0; i--) {
+          let word = activeWords[i];
+          word.update();
+          word.draw();
+
+          if (word.y > h) {
+            // Missed word
+            activeWords.splice(i, 1);
+            health -= 10;
+            document.getElementById("health").innerText = health + "%";
+            playTone(100, "sawtooth", 0.3);
+
+            if (health <= 30)
+              document.getElementById("health").style.color = "red";
+            if (health <= 0) gameOver();
+          }
+        }
+
+        // Update Particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          let p = particles[i];
+          p.update();
+          p.draw();
+          if (p.life <= 0) particles.splice(i, 1);
+        }
+      }
+
+      /* --- INPUT HANDLING --- */
+      // Physical Keyboard
+      window.addEventListener("keydown", (e) => {
+        const char = e.key.toUpperCase();
+        if (char.length === 1 && char >= "A" && char <= "Z") {
+          checkInput(char);
+        }
+      });
+
+      // Virtual Keyboard for Mobile
+      const keys = "QWERTYUIOPASDFGHJKLZXCVBNM";
+      const kb = document.getElementById("mobile-keyboard");
+      if ("ontouchstart" in window || navigator.maxTouchPoints > 0) {
+        kb.style.display = "grid";
+        // Create keys
+        keys.split("").forEach((k) => {
+          const btn = document.createElement("div");
+          btn.className = "key";
+          btn.innerText = k;
+          btn.onclick = (e) => {
+            e.preventDefault();
+            checkInput(k);
+          };
+          kb.appendChild(btn);
+        });
+      }
+    </script>
+  </body>
+</html>

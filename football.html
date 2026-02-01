@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <title>TITAN STRIKE | MOBILE</title>
+    <style>
+      :root {
+        --home-kit: #0088ff;
+        --away-kit: #dd0000;
+        --gk-kit: #ffee00;
+        --grass-1: #2a6620;
+        --grass-2: #327a26;
+        --ui-bg: rgba(10, 10, 10, 0.92);
+        --accent: #3b82f6;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: none; /* Prevents scrolling while playing */
+        user-select: none;
+      }
+
+      body {
+        margin: 0;
+        background: #000;
+        overflow: hidden;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: white;
+        height: 100vh;
+        width: 100vw;
+      }
+
+      /* HUD LAYOUT */
+      #hud {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        z-index: 20;
+        padding-top: env(safe-area-inset-top); /* Notch support */
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.8) 0%,
+          transparent 100%
+        );
+      }
+
+      .team-box {
+        text-align: center;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+      }
+      .team-name {
+        font-size: 10px;
+        font-weight: 800;
+        opacity: 0.8;
+        letter-spacing: 1px;
+        margin-bottom: 2px;
+      }
+      .team-score {
+        font-size: 32px;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      /* TOAST NOTIFICATIONS */
+      .toast {
+        position: absolute;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%) scale(0.8);
+        background: white;
+        color: black;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 14px;
+        text-transform: uppercase;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
+      .toast.combo {
+        background: #fbbf24;
+        transform: translateX(-50%) scale(1.1) rotate(-3deg);
+      }
+
+      /* MODALS (START/END SCREENS) */
+      .modal {
+        position: absolute;
+        inset: 0;
+        background: var(--ui-bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: auto;
+        z-index: 50;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: clamp(28px, 8vw, 60px);
+        margin: 0;
+        font-style: italic;
+        text-transform: uppercase;
+        letter-spacing: -1px;
+        background: linear-gradient(to right, #fff, #9ca3af);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        line-height: 1.1;
+      }
+
+      .sub {
+        color: #9ca3af;
+        font-size: 14px;
+        margin-bottom: 40px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        text-align: center;
+      }
+
+      .control-group {
+        width: 100%;
+        max-width: 320px;
+        margin-bottom: 20px;
+      }
+
+      label {
+        font-size: 11px;
+        color: #6b7280;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 8px;
+        display: block;
+      }
+
+      select {
+        width: 100%;
+        padding: 14px;
+        background: #1f2937;
+        color: white;
+        border: 1px solid #374151;
+        border-radius: 12px;
+        font-size: 16px;
+        outline: none;
+        appearance: none;
+      }
+
+      /* BUTTONS */
+      .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        max-width: 320px;
+      }
+
+      .btn {
+        background: white;
+        color: black;
+        border: none;
+        padding: 18px 0;
+        width: 100%;
+        font-size: 16px;
+        font-weight: 800;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: transform 0.1s;
+        box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+      }
+      .btn:active {
+        transform: scale(0.96);
+      }
+
+      .btn.secondary {
+        background: transparent;
+        color: white;
+        border: 1px solid #4b5563;
+        box-shadow: none;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="hud">
+      <div class="top-bar">
+        <div class="team-box">
+          <div class="team-name">HOME</div>
+          <div class="team-score" style="color: var(--home-kit)" id="s-p1">
+            0
+          </div>
+        </div>
+        <div class="team-box">
+          <div class="team-name">AWAY</div>
+          <div class="team-score" style="color: var(--away-kit)" id="s-p2">
+            0
+          </div>
+        </div>
+      </div>
+      <div class="toast" id="msg">READY</div>
+    </div>
+
+    <div class="modal" id="m-start">
+      <h1>Titan Strike</h1>
+      <div class="sub">Physics Football</div>
+
+      <div class="control-group">
+        <label>Select Formation</label>
+        <select id="formation-sel">
+          <option value="4-4-2">4-4-2 (Balanced)</option>
+          <option value="4-3-3">4-3-3 (Attack)</option>
+          <option value="5-3-2">5-3-2 (Defense)</option>
+        </select>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn" onclick="game.init('PVP')">2 Player (Local)</button>
+        <button class="btn secondary" onclick="game.init('CPU')">
+          VS Computer
+        </button>
+      </div>
+    </div>
+
+    <div class="modal" id="m-end" style="display: none">
+      <h1 id="win-txt">GAME OVER</h1>
+      <div class="sub" id="win-sub">Match Finished</div>
+      <div class="btn-group">
+        <button class="btn" onclick="game.reset()">Rematch</button>
+        <button class="btn secondary" onclick="location.reload()">
+          Main Menu
+        </button>
+      </div>
+    </div>
+
+    <canvas id="stage"></canvas>
+
+    <script>
+      // --- CONFIGURATION ---
+      const CFG = {
+        FRICTION: 0.94, // Slightly slippery for fun
+        STOP_THRESHOLD: 0.1,
+        MAX_POWER: 600, // High power ceiling
+        POWER_SCALE: 0.22, // Power multiplier
+        KILL_DIST: 35, // Collision radius
+        GRASS_STRIPE: 60, // Visual stripe width
+      };
+
+      const FORMATIONS = {
+        "4-4-2": {
+          DEF: [
+            [0.18, 0.2],
+            [0.18, 0.4],
+            [0.18, 0.6],
+            [0.18, 0.8],
+          ],
+          MID: [
+            [0.32, 0.15],
+            [0.32, 0.38],
+            [0.32, 0.62],
+            [0.32, 0.85],
+          ],
+          FWD: [
+            [0.45, 0.35],
+            [0.45, 0.65],
+          ],
+        },
+        "4-3-3": {
+          DEF: [
+            [0.18, 0.2],
+            [0.18, 0.4],
+            [0.18, 0.6],
+            [0.18, 0.8],
+          ],
+          MID: [
+            [0.3, 0.5],
+            [0.3, 0.25],
+            [0.3, 0.75],
+          ],
+          FWD: [
+            [0.45, 0.5],
+            [0.42, 0.2],
+            [0.42, 0.8],
+          ],
+        },
+        "5-3-2": {
+          DEF: [
+            [0.15, 0.5],
+            [0.15, 0.3],
+            [0.15, 0.7],
+            [0.12, 0.15],
+            [0.12, 0.85],
+          ],
+          MID: [
+            [0.28, 0.5],
+            [0.28, 0.3],
+            [0.28, 0.7],
+          ],
+          FWD: [
+            [0.42, 0.4],
+            [0.42, 0.6],
+          ],
+        },
+      };
+
+      const AUDIO = new (window.AudioContext || window.webkitAudioContext)();
+
+      class Game {
+        constructor() {
+          this.canvas = document.getElementById("stage");
+          this.ctx = this.canvas.getContext("2d");
+          this.players = [];
+          this.corpses = [];
+          this.particles = [];
+
+          this.state = "IDLE";
+          this.turn = 1;
+          this.mode = "PVP";
+          this.turnKills = 0;
+          this.drag = {
+            active: null,
+            start: { x: 0, y: 0 },
+            curr: { x: 0, y: 0 },
+          };
+
+          // High DPI Fix for crisp mobile graphics
+          this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+          this.resize = this.resize.bind(this);
+          this.loop = this.loop.bind(this);
+
+          window.addEventListener("resize", this.resize);
+          this.setupInput();
+          this.resize();
+        }
+
+        resize() {
+          this.w = window.innerWidth;
+          this.h = window.innerHeight;
+          this.canvas.width = this.w * this.dpr;
+          this.canvas.height = this.h * this.dpr;
+          this.canvas.style.width = this.w + "px";
+          this.canvas.style.height = this.h + "px";
+          this.ctx.scale(this.dpr, this.dpr);
+        }
+
+        init(mode) {
+          this.mode = mode;
+          document.getElementById("m-start").style.display = "none";
+          if (AUDIO.state === "suspended") AUDIO.resume();
+          this.reset();
+          this.loop();
+        }
+
+        reset() {
+          this.players = [];
+          this.corpses = [];
+          this.particles = [];
+          this.turn = 1;
+          this.state = "IDLE";
+          this.turnKills = 0;
+          document.getElementById("m-end").style.display = "none";
+
+          const fmtName = document.getElementById("formation-sel").value;
+          const fmt = FORMATIONS[fmtName];
+
+          const addP = (team, x, y, role) => {
+            this.players.push({
+              team: team,
+              x: team === 1 ? this.w * x : this.w * (1 - x),
+              y: this.h * y,
+              vx: 0,
+              vy: 0,
+              radius: 15, // Slightly larger for mobile visibility
+              role: role,
+              dead: false,
+              num: (this.players.length % 11) + 1,
+            });
+          };
+
+          // GKs
+          addP(1, 0.06, 0.5, "GK");
+          addP(2, 0.06, 0.5, "GK");
+
+          // Formation
+          for (let role in fmt) {
+            fmt[role].forEach((pos) => {
+              addP(1, pos[0], pos[1], role);
+              addP(2, pos[0], pos[1], role);
+            });
+          }
+
+          this.updateUI();
+          this.msg("KICK OFF");
+        }
+
+        setupInput() {
+          const getPos = (e) => {
+            const t = e.touches ? e.touches[0] : e;
+            const r = this.canvas.getBoundingClientRect();
+            return { x: t.clientX - r.left, y: t.clientY - r.top };
+          };
+
+          const start = (e) => {
+            if (this.state !== "IDLE") return;
+            if (this.mode === "CPU" && this.turn === 2) return;
+
+            const p = getPos(e);
+            // Increased touch radius (50px) for easier mobile selection
+            const hit = this.players.find(
+              (pl) =>
+                !pl.dead &&
+                pl.team === this.turn &&
+                Math.hypot(pl.x - p.x, pl.y - p.y) < 50,
+            );
+
+            if (hit) {
+              this.drag.active = hit;
+              this.drag.start = p;
+              this.drag.curr = p;
+              this.state = "AIM";
+            }
+          };
+
+          const move = (e) => {
+            if (this.state === "AIM") {
+              this.drag.curr = getPos(e);
+            }
+          };
+
+          const end = (e) => {
+            if (this.state === "AIM" && this.drag.active) {
+              const dx = this.drag.start.x - this.drag.curr.x;
+              const dy = this.drag.start.y - this.drag.curr.y;
+              const dist = Math.hypot(dx, dy);
+
+              if (dist > 20) {
+                const power = Math.min(dist, CFG.MAX_POWER) * CFG.POWER_SCALE;
+                const angle = Math.atan2(dy, dx);
+
+                this.drag.active.vx = Math.cos(angle) * power;
+                this.drag.active.vy = Math.sin(angle) * power;
+
+                this.state = "MOVE";
+                this.sfx(300, "triangle");
+              } else {
+                this.state = "IDLE";
+              }
+            }
+            this.drag.active = null;
+          };
+
+          this.canvas.addEventListener("mousedown", start);
+          window.addEventListener("mousemove", move);
+          window.addEventListener("mouseup", end);
+          this.canvas.addEventListener(
+            "touchstart",
+            (e) => {
+              e.preventDefault();
+              start(e);
+            },
+            { passive: false },
+          );
+          this.canvas.addEventListener(
+            "touchmove",
+            (e) => {
+              e.preventDefault();
+              move(e);
+            },
+            { passive: false },
+          );
+          window.addEventListener("touchend", end);
+        }
+
+        update() {
+          if (this.state === "MOVE") {
+            let moving = false;
+
+            this.players.forEach((p) => {
+              if (p.dead) return;
+
+              p.x += p.vx;
+              p.y += p.vy;
+              p.vx *= CFG.FRICTION;
+              p.vy *= CFG.FRICTION;
+
+              if (Math.abs(p.vx) < CFG.STOP_THRESHOLD) p.vx = 0;
+              if (Math.abs(p.vy) < CFG.STOP_THRESHOLD) p.vy = 0;
+
+              // Wall Bounce
+              if (p.x < 15 || p.x > this.w - 15) {
+                p.vx *= -0.7;
+                p.x = p.x < 15 ? 15 : this.w - 15;
+              }
+              if (p.y < 15 || p.y > this.h - 15) {
+                p.vy *= -0.7;
+                p.y = p.y < 15 ? 15 : this.h - 15;
+              }
+
+              if (Math.abs(p.vx) > 0 || Math.abs(p.vy) > 0) moving = true;
+
+              // Collisions
+              this.players.forEach((target) => {
+                if (p.team !== target.team && !target.dead) {
+                  const d = Math.hypot(p.x - target.x, p.y - target.y);
+                  if (d < CFG.KILL_DIST) {
+                    target.dead = true;
+                    this.corpses.push({ ...target });
+                    this.turnKills++;
+                    p.vx *= 0.6;
+                    p.vy *= 0.6;
+                    this.spawnParticles(
+                      target.x,
+                      target.y,
+                      target.team === 1 ? "#0088ff" : "#dd0000",
+                    );
+                    this.sfx(100, "sawtooth");
+                    this.msg(
+                      this.turnKills > 1
+                        ? this.turnKills + "X COMBO!"
+                        : "ELIMINATED",
+                      this.turnKills > 1,
+                    );
+                  }
+                }
+              });
+            });
+
+            // Particles
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+              let pt = this.particles[i];
+              pt.x += pt.vx;
+              pt.y += pt.vy;
+              pt.life -= 0.05;
+              if (pt.life <= 0) this.particles.splice(i, 1);
+            }
+
+            if (!moving) this.endTurn();
+          }
+        }
+
+        endTurn() {
+          this.updateUI();
+
+          const p1A = this.players.filter(
+            (p) => p.team === 1 && !p.dead,
+          ).length;
+          const p2A = this.players.filter(
+            (p) => p.team === 2 && !p.dead,
+          ).length;
+
+          if (p1A === 0 || p2A === 0) {
+            this.state = "OVER";
+            document.getElementById("m-end").style.display = "flex";
+            document.getElementById("win-txt").innerText =
+              p1A === 0 ? "AWAY WINS" : "HOME WINS";
+            document.getElementById("win-txt").style.color =
+              p1A === 0 ? "#dd0000" : "#0088ff";
+            return;
+          }
+
+          this.turn = this.turn === 1 ? 2 : 1;
+          this.state = "IDLE";
+          this.turnKills = 0;
+          this.msg(this.turn === 1 ? "HOME TURN" : "AWAY TURN");
+
+          if (this.mode === "CPU" && this.turn === 2) {
+            setTimeout(() => this.aiTurn(), 800);
+          }
+        }
+
+        aiTurn() {
+          const cpu = this.players.filter((p) => p.team === 2 && !p.dead);
+          const targets = this.players.filter((p) => p.team === 1 && !p.dead);
+
+          if (cpu.length > 0 && targets.length > 0) {
+            const shooter = cpu[Math.floor(Math.random() * cpu.length)];
+            let target = targets[0],
+              minD = 9999;
+
+            targets.forEach((t) => {
+              const d = Math.hypot(t.x - shooter.x, t.y - shooter.y);
+              if (d < minD) {
+                minD = d;
+                target = t;
+              }
+            });
+
+            const angle = Math.atan2(
+              target.y - shooter.y,
+              target.x - shooter.x,
+            );
+            const err = (Math.random() - 0.5) * 0.15; // Small error margin
+            const power = Math.min(minD * 0.35, 45);
+
+            shooter.vx = Math.cos(angle + err) * power;
+            shooter.vy = Math.sin(angle + err) * power;
+            this.state = "MOVE";
+            this.sfx(300, "triangle");
+          } else {
+            this.endTurn();
+          }
+        }
+
+        draw() {
+          const ctx = this.ctx;
+          const W = this.w;
+          const H = this.h;
+
+          // Field Background
+          for (let x = 0; x < W; x += CFG.GRASS_STRIPE) {
+            ctx.fillStyle =
+              (x / CFG.GRASS_STRIPE) % 2 === 0 ? "#2a6620" : "#327a26";
+            ctx.fillRect(x, 0, CFG.GRASS_STRIPE, H);
+          }
+
+          // Field Lines
+          ctx.strokeStyle = "rgba(255,255,255,0.6)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          const pad = 20;
+          ctx.strokeRect(pad, pad, W - pad * 2, H - pad * 2); // Touchline
+          ctx.moveTo(W / 2, pad);
+          ctx.lineTo(W / 2, H - pad); // Halfway line
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(W / 2, H / 2, 50, 0, Math.PI * 2);
+          ctx.stroke(); // Center circle
+          ctx.beginPath();
+          ctx.arc(W / 2, H / 2, 3, 0, Math.PI * 2);
+          ctx.fillStyle = "#fff";
+          ctx.fill(); // Spot
+
+          // Penalty Areas
+          const drawBox = (isLeft) => {
+            const x = isLeft ? pad : W - pad;
+            const dir = isLeft ? 1 : -1;
+            const cy = H / 2;
+
+            ctx.strokeRect(isLeft ? x : x - 100, cy - 90, 100, 180); // 18yd
+            ctx.strokeRect(isLeft ? x : x - 35, cy - 40, 35, 80); // 6yd
+
+            // Arc
+            ctx.beginPath();
+            ctx.arc(
+              x + 80 * dir,
+              cy,
+              35,
+              isLeft ? -0.9 : 2.2,
+              isLeft ? 0.9 : 4.05,
+            );
+            ctx.stroke();
+          };
+          drawBox(true);
+          drawBox(false);
+
+          // Render Corpses
+          this.corpses.forEach((c) => {
+            ctx.save();
+            ctx.translate(c.x, c.y);
+            ctx.rotate(Math.random());
+            ctx.strokeStyle = "rgba(0,0,0,0.3)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-6, -6);
+            ctx.lineTo(6, 6);
+            ctx.moveTo(6, -6);
+            ctx.lineTo(-6, 6);
+            ctx.stroke();
+            ctx.restore();
+          });
+
+          // Particles
+          this.particles.forEach((p) => {
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          });
+
+          // Players
+          this.players.forEach((p) => {
+            if (p.dead) return;
+
+            ctx.fillStyle = p.team === 1 ? "#0088ff" : "#dd0000";
+            if (p.role === "GK") ctx.fillStyle = "#ffee00";
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.3)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = p.role === "GK" ? "black" : "white";
+            ctx.font = "bold 11px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(p.num, p.x, p.y);
+
+            if (p === this.drag.active) {
+              ctx.strokeStyle = "white";
+              ctx.lineWidth = 3;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, p.radius + 5, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          });
+
+          // Aim Line
+          if (this.state === "AIM" && this.drag.active) {
+            const dx = this.drag.start.x - this.drag.curr.x;
+            const dy = this.drag.start.y - this.drag.curr.y;
+            const d = Math.hypot(dx, dy);
+
+            if (d > 10) {
+              const angle = Math.atan2(dy, dx);
+              const vizLen = Math.min(d, 150);
+              const ex = this.drag.active.x + Math.cos(angle) * vizLen;
+              const ey = this.drag.active.y + Math.sin(angle) * vizLen;
+
+              ctx.strokeStyle = "white";
+              ctx.lineWidth = 3;
+              ctx.lineCap = "round";
+              ctx.setLineDash([8, 8]);
+              ctx.beginPath();
+              ctx.moveTo(this.drag.active.x, this.drag.active.y);
+              ctx.lineTo(ex, ey);
+              ctx.stroke();
+              ctx.setLineDash([]);
+
+              ctx.fillStyle = "white";
+              ctx.beginPath();
+              ctx.arc(ex, ey, 5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        loop() {
+          this.update();
+          this.draw();
+          requestAnimationFrame(this.loop);
+        }
+
+        spawnParticles(x, y, color) {
+          for (let i = 0; i < 8; i++) {
+            this.particles.push({
+              x: x,
+              y: y,
+              vx: (Math.random() - 0.5) * 8,
+              vy: (Math.random() - 0.5) * 8,
+              life: 1.0,
+              color: color,
+            });
+          }
+        }
+
+        updateUI() {
+          document.getElementById("s-p1").innerText = this.players.filter(
+            (p) => p.team === 1 && !p.dead,
+          ).length;
+          document.getElementById("s-p2").innerText = this.players.filter(
+            (p) => p.team === 2 && !p.dead,
+          ).length;
+        }
+
+        msg(txt, combo) {
+          const t = document.getElementById("msg");
+          t.innerText = txt;
+          t.className = combo ? "toast show combo" : "toast show";
+          setTimeout(() => (t.className = "toast"), 2000);
+        }
+
+        sfx(freq, type) {
+          if (!AUDIO) return;
+          const o = AUDIO.createOscillator();
+          const g = AUDIO.createGain();
+          o.connect(g);
+          g.connect(AUDIO.destination);
+          o.type = type;
+          o.frequency.setValueAtTime(freq, AUDIO.currentTime);
+          g.gain.setValueAtTime(0.1, AUDIO.currentTime);
+          g.gain.linearRampToValueAtTime(0, AUDIO.currentTime + 0.15);
+          o.start();
+          o.stop(AUDIO.currentTime + 0.15);
+        }
+      }
+
+      const game = new Game();
+    </script>
+  </body>
+</html>
